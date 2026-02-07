@@ -484,3 +484,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (live) live.addEventListener("click", scrollToMapFixed);
 });
+
+// ===== FIX FINAL: Voir conditions -> scroll map (anti scripts qui écrasent) =====
+(function () {
+  function scrollToMapHard() {
+    const target = document.getElementById("map");
+    if (!target) return;
+
+    const nav = document.getElementById("navbar");
+    const navH = nav ? nav.getBoundingClientRect().height : 72;
+
+    const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 16;
+    window.scrollTo({ top, behavior: "smooth" });
+
+    // Leaflet resize (si map existe)
+    setTimeout(() => {
+      try { if (typeof map !== "undefined" && map) map.invalidateSize(); } catch {}
+    }, 700);
+  }
+
+  // Event delegation: marche même si le bouton est recréé/injecté
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#go-map");
+    const live = e.target.closest("#hero-live");
+    if (btn || live) {
+      e.preventDefault();
+      scrollToMapHard();
+    }
+  }, true); // capture=true -> passe avant les autres listeners
+})();
