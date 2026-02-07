@@ -915,3 +915,45 @@ main{
 .pin-glow.red{
   filter: drop-shadow(0 0 16px rgba(239,68,68,.26));
 }
+
+/* =========================
+   FIX — Home layout (center) + Leaflet map visible
+   ========================= */
+
+/* Centrage global de la section HERO / MAP */
+.hero-inner,
+.map-header,
+.map-layout-focus{
+  width: min(var(--container), calc(100% - 12vw));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Assure un vrai centrage du texte hero */
+.hero-inner{
+  max-width: 980px;
+  text-align: center;
+}
+
+/* ✅ IMPORTANT: Leaflet a BESOIN d'une hauteur */
+.premium-map{
+  width: 100%;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#surf-map{
+  width: 100%;
+  height: 560px;      /* <-- essentiel */
+  min-height: 560px;  /* <-- évite le 0px */
+  border-radius: 18px;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  #surf-map{
+    height: 460px;
+    min-height: 460px;
+  }
+}
