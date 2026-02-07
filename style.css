@@ -754,3 +754,9 @@ img{max-width:100%;display:block}
   -webkit-backface-visibility:hidden;
   will-change: transform;
 }
+
+/* ✅ Center global main content (fallback) */
+main{
+  width: min(var(--container), calc(100% - 12vw));
+  margin: 0 auto;
+}

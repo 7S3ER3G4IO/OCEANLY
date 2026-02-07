@@ -14,7 +14,6 @@
 
 <body>
 
-  <!-- NAVBAR (IDENTIQUE PARTOUT) -->
   <header class="navbar navbar-fixed" id="navbar">
     <div class="logo">
       <img src="assets/images/logo.svg" alt="Logo OCEANLY">
@@ -25,7 +24,7 @@
     </div>
 
     <nav class="nav-links" id="navLinks">
-      <a href="index.html" data-page="home">Accueil</a>
+      <a href="index.html" data-page="home" class="active">Accueil</a>
       <a href="#map" data-page="map">Carte</a>
       <a href="#favorites" data-page="favorites">Favoris</a>
       <a href="camera.html" data-page="camera">Caméra</a>
@@ -37,7 +36,6 @@
     </div>
   </header>
 
-  <!-- HERO (TEXTE CENTRÉ + 1 BOUTON PREMIUM) -->
   <section class="hero hero-dark hero-center">
     <div class="hero-inner">
       <div class="hero-live-badge">
@@ -55,7 +53,7 @@
       </p>
 
       <div class="hero-actions hero-actions-center">
-        <button id="go-map" class="btn-hero">
+        <button id="go-map" class="btn-hero" type="button">
           <span>Voir les conditions</span>
           <span class="btn-hero-ico">↓</span>
         </button>
@@ -63,7 +61,6 @@
     </div>
   </section>
 
-  <!-- MAP (DOIT ÊTRE JUSTE APRÈS LE HERO) -->
   <section class="hero-map-wrap" id="map">
     <div class="map-header">
       <h2 class="map-title">Trouve ton spot de surf</h2>
@@ -103,7 +100,6 @@
     </div>
   </section>
 
-  <!-- FAVORITES -->
   <section id="favorites" class="favorites-section">
     <div class="section-head">
       <h2 class="section-title">❤️ Mes favoris</h2>
@@ -117,7 +113,6 @@
     <div id="favorites-list" class="favorites-list"></div>
   </section>
 
-  <!-- ACTU -->
   <section class="actu-section" id="home-actu">
     <div class="section-head">
       <h2 class="section-title">📰 Actu surf</h2>
@@ -135,13 +130,11 @@
     <div class="muted" id="actu-status" style="margin-top:10px;">—</div>
   </section>
 
-  <!-- NEWS NOTIF (SIDE) -->
   <button id="news-notif" class="news-notif hidden" type="button">
     <div class="news-notif-title">📰 Nouvelle actu surf</div>
     <div id="news-notif-sub" class="news-notif-sub">Clique pour voir</div>
   </button>
 
-  <!-- LOGIN MODAL -->
   <div id="login-modal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -175,13 +168,11 @@
         </div>
 
         <button id="login-save" class="primary modal-cta" type="button">Valider</button>
-
         <div id="login-state" class="muted" style="margin-top:10px;">—</div>
       </div>
     </div>
   </div>
 
-  <!-- REFRESH MODAL (5s) -->
   <div id="refresh-overlay" class="refresh-overlay hidden" aria-live="polite">
     <div class="refresh-box">
       <div class="refresh-title">Mise à jour</div>
@@ -193,6 +184,8 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="data.js"></script>
+  <script src="common.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
