@@ -1120,3 +1120,121 @@ main{
     opacity: 0;
   }
 }
+
+/* =========================
+   HERO: centrage parfait (fix)
+   ========================= */
+
+/* Force le hero à être un vrai bloc centré */
+.hero{
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+/* Force le contenu à être centré même si des styles existants le décalent */
+.hero-inner{
+  width: min(980px, calc(100% - 48px)) !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;  /* <-- important */
+  justify-content: center !important;
+}
+
+/* Fix : certains éléments héritent d'un align left */
+.hero-inner > *{
+  margin-left: auto !important;
+  margin-right: auto !important;
+  text-align: center !important;
+}
+
+/* =========================
+   LIVE badge premium (rouge + lueur + interaction)
+   ========================= */
+
+.hero-live-badge{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 0 0 1px rgba(239,68,68,.12),
+    0 18px 40px rgba(0,0,0,.35);
+
+  cursor: pointer;                 /* interactif */
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+  user-select: none;
+}
+
+.hero-live-badge:hover{
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(239,68,68,.22),
+    0 24px 52px rgba(0,0,0,.45);
+}
+
+.hero-live-badge:active{
+  transform: scale(.99);
+  opacity: .92;
+}
+
+/* Dot pulse rouge + halo */
+.hero-live-badge .live-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(239,68,68,1);
+  box-shadow: 0 0 18px rgba(239,68,68,.55);
+  position: relative;
+}
+
+/* Anneau pulse */
+.hero-live-badge .live-dot::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius: 999px;
+  border: 2px solid rgba(239,68,68,.25);
+  animation: livePulse 1.2s ease-out infinite;
+}
+
+@keyframes livePulse{
+  0%   { transform: scale(.65); opacity: .85; }
+  70%  { transform: scale(1.25); opacity: .0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* Texte LIVE + glow */
+.hero-live-badge .live-text{
+  font-weight: 900;
+  letter-spacing: .12em;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 0 14px rgba(239,68,68,.22);
+}
+
+/* =========================
+   Bouton Voir conditions (premium + clair + centré)
+   ========================= */
+
+.btn-hero-premium{
+  margin-top: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Optionnel: donne un peu plus d'espace vertical entre hero et carte */
+.hero-dark{
+  padding-bottom: 28px;
+}

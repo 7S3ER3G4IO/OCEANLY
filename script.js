@@ -483,6 +483,32 @@ if (el.loginSave) el.loginSave.addEventListener("click", async () => {
    Init
 ------------------------------ */
 document.addEventListener("DOMContentLoaded", async () => {
+  function scrollToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  const nav = document.getElementById("navbar");
+  const navH = nav ? nav.getBoundingClientRect().height : 72;
+
+  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 16;
+  window.scrollTo({ top, behavior: "smooth" });
+
+  // si Leaflet existe (map), force recalcul taille après scroll
+  setTimeout(() => {
+    if (typeof map !== "undefined" && map) map.invalidateSize();
+  }, 650);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Bouton Voir conditions -> scroll map
+  const go = document.getElementById("go-map");
+  if (go) go.addEventListener("click", () => scrollToSection("map"));
+
+  // Badge LIVE interactif -> scroll map aussi (UX premium)
+  const live = document.querySelector(".hero-live-badge");
+  if (live) live.addEventListener("click", () => scrollToSection("map"));
+});
+
   bindLoginButtonsFromNavbar();
   initMap();
   renderSpotList();
