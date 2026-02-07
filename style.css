@@ -1716,3 +1716,295 @@ main{
   border-color: rgba(56,189,248,.22) !important;
   box-shadow: 0 0 18px rgba(56,189,248,.14) !important;
 }
+
+/* =========================================================
+   MAP + PANEL — map PLUS LARGE, hauteur réduite,
+   panel centré verticalement avec mêmes marges haut/bas.
+   Colle tout en bas de style.css
+   ========================================================= */
+
+:root{
+  --mapH: 430px;        /* hauteur desktop (réduite) */
+  --mapH-md: 380px;     /* tablette */
+  --mapH-sm: 320px;     /* mobile */
+  --panelW: 360px;      /* largeur panel à droite */
+  --gap: 18px;          /* espace entre map et panel */
+}
+
+/* Container global de la section map: plein width du container */
+.map-shell{
+  width: min(var(--container, 1200px), calc(100% - 48px)) !important;
+  margin: 0 auto !important;
+}
+
+/* Layout: map large + panel fixe à droite */
+.map-layout-focus{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) var(--panelW) !important; /* map prend toute la place */
+  gap: var(--gap) !important;
+  align-items: center !important;  /* ✅ centre le panel verticalement vs la map */
+}
+
+/* Map: pleine largeur dispo + hauteur réduite */
+.premium-map{
+  max-width: none !important;   /* ✅ enlève la limite -> map plus large */
+  width: 100% !important;
+  height: var(--mapH) !important;
+  margin: 0 !important;         /* la map colle au layout */
+}
+
+#surf-map{
+  width: 100% !important;
+  height: var(--mapH) !important;
+  min-height: var(--mapH) !important;
+}
+
+/* Panel: même hauteur que la map, et “au milieu” (marges haut/bas égales) */
+.side-panel{
+  height: var(--mapH) !important;
+  display: flex !important;
+  align-items: center !important;    /* ✅ centre la card dans la colonne */
+}
+
+.panel-card{
+  height: 100% !important;           /* ✅ même hauteur que la map */
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important; /* ✅ contenu centré dans la card */
+}
+
+/* Liste scroll: occupe le reste, sans être trop haute */
+.spot-list-scroll{
+  flex: 1 1 auto !important;
+  overflow: auto !important;
+  padding-right: 6px;
+  margin-top: 10px;
+}
+
+/* Responsive: on stack en colonne */
+@media (max-width: 980px){
+  .map-layout-focus{
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+  .premium-map, #surf-map{
+    height: var(--mapH-md) !important;
+    min-height: var(--mapH-md) !important;
+  }
+  .side-panel{
+    height: auto !important;
+    align-items: stretch !important;
+  }
+  .panel-card{
+    height: auto !important;
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 520px){
+  .premium-map, #surf-map{
+    height: var(--mapH-sm) !important;
+    min-height: var(--mapH-sm) !important;
+  }
+}
+ 
+/* =========================================================
+   CONDITIONS (spot.html) — DA verticale premium (modules)
+   Colle tout en bas de style.css
+   ========================================================= */
+
+.cond-page{
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 22px 0 40px;
+}
+
+.cond-head{
+  display:flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 8px;
+}
+.cond-title{
+  margin: 0;
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+.cond-sub{ margin: 6px 0 0; opacity: .86; }
+.cond-head__right{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 840px){
+  .cond-head{ flex-direction: column; }
+  .cond-head__right{ justify-content:flex-start; }
+}
+
+.cond-stack{
+  display:grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+/* Cards modules */
+.cond-card{
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 20px 60px rgba(0,0,0,.35);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cond-card__top{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cond-h2{
+  margin:0;
+  font-weight: 950;
+  letter-spacing: -.01em;
+}
+
+/* Live pill (comme ton style Live) */
+.cond-livepill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239,68,68,.22);
+  background: rgba(0,0,0,.25);
+  box-shadow: 0 0 18px rgba(239,68,68,.12);
+  font-weight: 900;
+  letter-spacing: .12em;
+  font-size: 12px;
+  color: #fff;
+}
+.cond-livepill .dot{
+  width: 9px; height: 9px;
+  border-radius: 999px;
+  background: rgba(239,68,68,1);
+  box-shadow: 0 0 16px rgba(239,68,68,.55);
+  position: relative;
+}
+.cond-livepill .dot::after{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border-radius: 999px;
+  border: 2px solid rgba(239,68,68,.22);
+  animation: livePulse2 1.2s ease-out infinite;
+}
+
+/* KPI vertical (1 ligne par info) */
+.cond-kpis{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.cond-kpi{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  padding: 10px 12px;
+}
+.cond-kpi__label{
+  opacity: .82;
+  font-size: 12px;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+.cond-kpi__value{
+  font-weight: 950;
+  color: #fff;
+  letter-spacing: .01em;
+}
+
+/* Chips (marée + créneau) */
+.cond-bars{
+  display:grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.cond-chip{
+  border-radius: 14px;
+  border: 1px solid rgba(56,189,248,.16);
+  background: rgba(56,189,248,.06);
+  box-shadow: 0 0 18px rgba(56,189,248,.08);
+  padding: 10px 12px;
+  color: rgba(255,255,255,.92);
+}
+
+/* Mini map */
+.cond-minimap{
+  width: 100%;
+  height: 320px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 16px 38px rgba(0,0,0,.35);
+}
+
+/* grid secondaire */
+.cond-grid2{
+  margin-top: 14px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 920px){
+  .cond-grid2{ grid-template-columns: 1fr; }
+}
+.cond-box{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  padding: 12px;
+}
+.cond-h3{
+  margin:0 0 8px;
+  font-weight: 950;
+}
+
+/* TEMPÊTE : lueur violette + symbole */
+#module-today.is-storm{
+  border-color: rgba(168,85,247,.30);
+  box-shadow: 0 0 0 1px rgba(168,85,247,.16), 0 0 36px rgba(168,85,247,.18), 0 26px 70px rgba(0,0,0,.55);
+}
+#module-today.is-storm::before{
+  content:"⛈";
+  position:absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 44px;
+  opacity: .22;
+  filter: drop-shadow(0 0 18px rgba(168,85,247,.35));
+}
+
+/* autres états (subtils) */
+#module-today.is-good{
+  border-color: rgba(34,197,94,.25);
+  box-shadow: 0 0 0 1px rgba(34,197,94,.12), 0 18px 60px rgba(0,0,0,.35);
+}
+#module-today.is-mid{
+  border-color: rgba(245,158,11,.22);
+}
+#module-today.is-bad{
+  border-color: rgba(239,68,68,.22);
+}
