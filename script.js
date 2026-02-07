@@ -1,29 +1,20 @@
 /* =========================================================
-   OCEANLY — HOME script (NETLIFY READY + SPOTS UNIFIÉS)
-   - Utilise window.OCEANLY.SPOTS (data.js) => slug unique partout
-   - Favoris = oceanly:favorites (unique)
-   - Map + popup + search + actu RSS proxy (jina.ai)
+   OCEANLY — HOME script (Ticket UI/UX + Actus Live + Favoris Netlify)
+   - Scroll "Voir conditions" => map avec offset navbar
+   - Map layout premium + zoom UI redesign (CSS)
+   - Swipe spots (liste) = navigation principale (pas de search)
+   - Favoris = backend Netlify (token + functions)
+   - Actus = Netlify Function news + auto-refresh
    ========================================================= */
 
-const LS_FAV = "oceanly:favorites";
-const LS_LOGIN = "oceanly:login";
+const SPOTS = window.OCEANLY?.SPOTS || [];
 
-/* -----------------------------
-   Spots (SOURCE UNIQUE)
------------------------------- */
-const SPOTS = (window.OCEANLY && window.OCEANLY.SPOTS) ? window.OCEANLY.SPOTS : [];
-
-/* -----------------------------
-   Helpers
------------------------------- */
 const $ = (sel) => document.querySelector(sel);
+
 const el = {
   navbar: $("#navbar"),
   goMap: $("#go-map"),
   map: $("#surf-map"),
-  search: $("#spot-search"),
-  clear: $("#search-clear"),
-  select: $("#spot-select"),
   list: $("#spot-list"),
 
   favEmpty: $("#favorites-empty"),
@@ -43,7 +34,7 @@ const el = {
   newsNotif: $("#news-notif"),
   newsNotifSub: $("#news-notif-sub"),
 
-  loginOpen: $("#login-open"),
+  loginOpen: null, // injecté par navbar
   loginModal: $("#login-modal"),
   loginClose: $("#login-close"),
   tabLogin: $("#tab-login"),
@@ -54,39 +45,9 @@ const el = {
   signupPass2: $("#signup-pass2"),
   loginSave: $("#login-save"),
   loginState: $("#login-state"),
+  loginHint: $("#login-hint"),
 };
 
-/* -----------------------------
-   Navbar scroll animation
------------------------------- */
-window.addEventListener("scroll", () => {
-  if (!el.navbar) return;
-  el.navbar.classList.toggle("scrolled", window.scrollY > 10);
-});
-
-/* Active nav (home) */
-(function setActiveNav() {
-  const path = location.pathname.split("/").pop() || "index.html";
-  const links = document.querySelectorAll(".nav-links a");
-  links.forEach(a => a.classList.remove("active"));
-  if (path === "index.html") {
-    document.querySelectorAll('.nav-links a[href="index.html"]').forEach(a=>a.classList.add("active"));
-  }
-})();
-
-/* -----------------------------
-   Scroll glitch fix (white flashes)
------------------------------- */
-let scrollTimer = null;
-window.addEventListener("scroll", () => {
-  document.body.classList.add("is-scrolling");
-  clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 120);
-}, { passive:true });
-
-/* -----------------------------
-   Toast
------------------------------- */
 function toast(msg) {
   if (!el.toast) return;
   el.toast.textContent = msg;
@@ -96,38 +57,76 @@ function toast(msg) {
 }
 
 /* -----------------------------
-   Favorites storage (UNIQUE)
+   Auth token storage (client)
+   - OK de stocker le token côté client (session),
+     mais les FAVORIS eux sont côté serveur (multi-device via login)
 ------------------------------ */
-function getFavs() {
-  try { return JSON.parse(localStorage.getItem(LS_FAV) || "[]"); }
-  catch { return []; }
-}
-function setFavs(arr) {
-  localStorage.setItem(LS_FAV, JSON.stringify(arr));
-}
-function isFav(slug) {
-  return getFavs().includes(slug);
-}
-function toggleFav(slug) {
-  const favs = getFavs();
-  const idx = favs.indexOf(slug);
-  if (idx >= 0) favs.splice(idx, 1);
-  else favs.push(slug);
-  setFavs(favs);
+const LS_TOKEN = "oceanly:auth_token";
+const LS_EMAIL = "oceanly:auth_email";
+
+function getToken() { return localStorage.getItem(LS_TOKEN) || ""; }
+function setToken(t) { localStorage.setItem(LS_TOKEN, t); }
+function setEmail(e) { localStorage.setItem(LS_EMAIL, e); }
+function getEmail() { return localStorage.getItem(LS_EMAIL) || ""; }
+function isAuthed() { return !!getToken(); }
+
+/* -----------------------------
+   Favorites (server)
+------------------------------ */
+let serverFavs = [];
+
+async function favsFetch() {
+  if (!isAuthed()) { serverFavs = []; renderFavs(); return; }
+  const r = await fetch("/.netlify/functions/favorites", {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "favorites");
+  serverFavs = j.favs || [];
   renderFavs();
 }
 
+function isFav(slug) { return serverFavs.includes(slug); }
+
+async function toggleFav(slug) {
+  if (!isAuthed()) {
+    toast("Connecte-toi pour enregistrer tes favoris (multi-device).");
+    openLogin();
+    return;
+  }
+  const r = await fetch("/.netlify/functions/favorites", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify({ slug })
+  });
+  const j = await r.json();
+  if (!j.ok) return toast(j.error || "Erreur favoris");
+
+  serverFavs = j.favs || [];
+  renderFavs();
+  toast(j.on ? "Ajouté aux favoris" : "Retiré des favoris");
+}
+
 /* -----------------------------
-   Render favorites section
+   Render favorites UI
 ------------------------------ */
 function renderFavs() {
-  const favs = getFavs();
   if (!el.favEmpty || !el.favList) return;
 
   el.favList.innerHTML = "";
-  el.favEmpty.classList.toggle("hidden", favs.length > 0);
+  const has = serverFavs.length > 0;
 
-  favs.forEach(slug => {
+  el.favEmpty.classList.toggle("hidden", has);
+  if (!has) {
+    el.favEmpty.textContent = isAuthed()
+      ? "Aucun favori. Ajoute-en depuis la carte."
+      : "Connecte-toi pour retrouver tes favoris partout.";
+  }
+
+  serverFavs.forEach(slug => {
     const s = SPOTS.find(x => x.slug === slug);
     if (!s) return;
 
@@ -144,17 +143,29 @@ function renderFavs() {
         <button class="cta-soft btn-small" data-remove="${s.slug}" type="button">Retirer</button>
       </div>
     `;
-    card.querySelector('[data-remove]').addEventListener("click", () => {
-      toggleFav(s.slug);
-      toast("Favori retiré");
-    });
-
+    card.querySelector('[data-remove]').addEventListener("click", () => toggleFav(s.slug));
     el.favList.appendChild(card);
   });
 }
 
 /* -----------------------------
-   Leaflet map init
+   Smooth scroll map (offset)
+------------------------------ */
+function scrollToMap() {
+  const target = document.getElementById("map");
+  if (!target) return;
+
+  const nav = document.getElementById("navbar");
+  const navH = nav ? nav.getBoundingClientRect().height : 72;
+
+  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 18;
+  window.scrollTo({ top, behavior: "smooth" });
+}
+
+if (el.goMap) el.goMap.addEventListener("click", scrollToMap);
+
+/* -----------------------------
+   Map (Leaflet)
 ------------------------------ */
 let map;
 let markers = new Map();
@@ -167,7 +178,7 @@ function bluePinIcon() {
   </svg>`;
   return L.divIcon({
     className: "",
-    html: `<div style="filter: drop-shadow(0 0 14px rgba(56,189,248,.22));">${svg}</div>`,
+    html: `<div class="pin-glow">${svg}</div>`,
     iconSize: [34,34],
     iconAnchor: [17,34],
     popupAnchor: [0,-30],
@@ -180,7 +191,7 @@ function redPinIcon() {
   </svg>`;
   return L.divIcon({
     className: "",
-    html: `<div style="filter: drop-shadow(0 0 16px rgba(239,68,68,.28));">${svg}</div>`,
+    html: `<div class="pin-glow red">${svg}</div>`,
     iconSize: [34,34],
     iconAnchor: [17,34],
     popupAnchor: [0,-30],
@@ -204,13 +215,14 @@ function initMap() {
     L.latLng(42.0, -5.8),
     L.latLng(51.5, 8.5)
   );
-  map.fitBounds(franceBounds, { padding:[20,20] });
+  map.fitBounds(franceBounds, { padding:[24,24] });
 
+  // Zoom UI (design via CSS)
   const zoomUI = document.createElement("div");
-  zoomUI.className = "zoom-ui";
+  zoomUI.className = "zoom-ui-premium";
   zoomUI.innerHTML = `
-    <button class="zoom-btn" id="zplus" type="button">+</button>
-    <button class="zoom-btn" id="zminus" type="button">−</button>
+    <button class="zoom-btn-premium" id="zplus" type="button" aria-label="Zoom +">+</button>
+    <button class="zoom-btn-premium" id="zminus" type="button" aria-label="Zoom -">−</button>
   `;
   el.map.parentElement.appendChild(zoomUI);
   zoomUI.querySelector("#zplus").addEventListener("click", () => map.zoomIn());
@@ -246,23 +258,20 @@ function openSpotPopup(slug, panTo = false) {
   const html = `
     <div class="popup-dark">
       <div class="popup-title">${s.name}</div>
-
       <div class="popup-badges">
         <span class="badge live"><span class="dot"></span> LIVE</span>
         <span class="badge">${s.region}</span>
       </div>
-
       <div class="popup-actions">
         <a class="popup-btn popup-btn-blue" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
         <a class="popup-btn popup-btn-red" href="camera.html?spot=${encodeURIComponent(s.slug)}">Caméra</a>
         <button class="popup-btn popup-btn-fav ${favClass}" data-fav="${s.slug}" type="button">${favText}</button>
       </div>
-
-      <div class="popup-hint">Pins bleus = spots • sélection = pin rouge.</div>
+      <div class="popup-hint">Swipe spots → clic → popup premium.</div>
     </div>
   `;
 
-  m.bindPopup(html, { closeButton:true, autoPan:true, className:"" }).openPopup();
+  m.bindPopup(html, { closeButton:true, autoPan:true }).openPopup();
 
   setTimeout(() => {
     const btn = document.querySelector(`button[data-fav="${CSS.escape(s.slug)}"]`);
@@ -270,133 +279,40 @@ function openSpotPopup(slug, panTo = false) {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       toggleFav(s.slug);
-      const on = isFav(s.slug);
-      btn.classList.toggle("on", on);
-      btn.textContent = on ? "Favori ✅" : "Favori";
-      toast(on ? "Ajouté aux favoris" : "Retiré des favoris");
     });
   }, 0);
 }
 
 /* -----------------------------
-   Search + select + list
+   Swipe Spots list (principal)
 ------------------------------ */
-function renderSpotUI() {
-  if (el.select) {
-    el.select.innerHTML = `<option value="">Choisir un spot…</option>`;
-    SPOTS.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.slug;
-      opt.textContent = `${s.name} — ${s.region}`;
-      el.select.appendChild(opt);
-    });
+function renderSpotList() {
+  if (!el.list) return;
+  el.list.innerHTML = "";
 
-    el.select.addEventListener("change", () => {
-      if (!el.select.value) return;
-      openSpotPopup(el.select.value, true);
-      scrollToMap();
-    });
-  }
-
-  if (el.list) {
-    el.list.innerHTML = "";
-    SPOTS.forEach(s => {
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className = "spot-row2";
-      row.innerHTML = `
-        <div class="spot-row2-top">
-          <div class="spot-row2-name">${s.name}</div>
-          <div class="spot-row2-right">
-            <span class="spot-status ok">DISPO</span>
-          </div>
+  SPOTS.forEach(s => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "spot-row2 swipe-row";
+    row.innerHTML = `
+      <div class="spot-row2-top">
+        <div class="spot-row2-name">${s.name}</div>
+        <div class="spot-row2-right">
+          <span class="spot-status ok">LIVE</span>
         </div>
-        <div class="spot-row2-sub">${s.region}</div>
-      `;
-      row.addEventListener("click", () => {
-        openSpotPopup(s.slug, true);
-        scrollToMap();
-      });
-      el.list.appendChild(row);
-    });
-  }
-
-  if (el.search) {
-    const updateClear = () => {
-      const v = (el.search.value || "").trim();
-      el.clear.classList.toggle("hidden", v.length === 0);
-    };
-
-    el.search.addEventListener("input", () => {
-      updateClear();
-      const q = (el.search.value || "").trim().toLowerCase();
-      if (!q) return;
-
-      const found = SPOTS.find(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.slug.includes(q) ||
-        s.region.toLowerCase().includes(q)
-      );
-      if (found) openSpotPopup(found.slug, true);
-    });
-
-    el.clear.addEventListener("click", () => {
-      el.search.value = "";
-      updateClear();
-      toast("Recherche effacée");
-
-      const franceBounds = L.latLngBounds(L.latLng(42.0, -5.8), L.latLng(51.5, 8.5));
-      map.fitBounds(franceBounds, { padding:[20,20] });
-
-      markers.forEach(m => m.setIcon(bluePinIcon()));
-      activeSpotSlug = null;
-    });
-
-    updateClear();
-  }
-}
-
-/* -----------------------------
-   Scroll to map
------------------------------- */
-function scrollToMap() {
-  const node = document.getElementById("map");
-  if (!node) return;
-  node.scrollIntoView({ behavior:"smooth", block:"start" });
-}
-if (el.goMap) el.goMap.addEventListener("click", scrollToMap);
-
-/* -----------------------------
-   Refresh modal 5s (ONLY on buttons)
------------------------------- */
-async function runRefreshCountdown(onDone) {
-  if (!el.refreshOverlay || !el.refreshCount) return;
-  el.refreshOverlay.classList.remove("hidden");
-  let n = 5;
-  el.refreshCount.textContent = String(n);
-  await new Promise((res) => {
-    const t = setInterval(() => {
-      n -= 1;
-      el.refreshCount.textContent = String(n);
-      if (n <= 0) { clearInterval(t); res(); }
-    }, 1000);
+      </div>
+      <div class="spot-row2-sub">${s.region}</div>
+    `;
+    row.addEventListener("click", () => openSpotPopup(s.slug, true));
+    el.list.appendChild(row);
   });
-  el.refreshOverlay.classList.add("hidden");
-  if (typeof onDone === "function") onDone();
 }
 
 /* -----------------------------
-   Actu (RSS via jina.ai proxy)
+   Actu LIVE (Netlify Function)
 ------------------------------ */
-const ACTU_SOURCES = [
-  "https://www.surf-report.com/rss",
-  "https://www.surfer.com/feed/"
-];
-
 let actuItems = [];
 let actuIndex = 0;
-
-function stripHtml(s) { return (s || "").replace(/<[^>]*>/g, "").trim(); }
 
 function formatDate(d) {
   try {
@@ -404,33 +320,6 @@ function formatDate(d) {
     if (Number.isNaN(dt.getTime())) return "";
     return dt.toLocaleString("fr-FR", { dateStyle:"medium", timeStyle:"short" });
   } catch { return ""; }
-}
-
-async function fetchRss(url) {
-  const prox = "https://r.jina.ai/http://" + url.replace(/^https?:\/\//,"");
-  const res = await fetch(prox, { cache:"no-store" });
-  if (!res.ok) throw new Error("fetch failed");
-  return res.text();
-}
-
-function parseRss(xmlText) {
-  const raw = xmlText;
-  const start = raw.indexOf("<?xml");
-  const xml = start >= 0 ? raw.slice(start) : raw;
-
-  const doc = new DOMParser().parseFromString(xml, "text/xml");
-  const items = Array.from(doc.querySelectorAll("item")).slice(0, 12);
-
-  return items.map(it => {
-    const title = it.querySelector("title")?.textContent?.trim() || "Actu surf";
-    const link = it.querySelector("link")?.textContent?.trim() || "#";
-    const pubDate = it.querySelector("pubDate")?.textContent?.trim() || "";
-    const desc = it.querySelector("description")?.textContent || "";
-    const clean = stripHtml(desc).slice(0, 160);
-    const enc = it.querySelector("enclosure");
-    const img = enc?.getAttribute("url") || "";
-    return { title, link, pubDate, desc: clean, img };
-  });
 }
 
 function renderActu3() {
@@ -443,10 +332,9 @@ function renderActu3() {
     const card = document.createElement("div");
     card.className = "actu-card";
     card.innerHTML = `
-      <div class="actu-img" style="${a.img ? `background-image:url('${a.img}')` : ""}"></div>
       <div class="actu-body">
         <div class="actu-title">${a.title}</div>
-        <div class="actu-date">${formatDate(a.pubDate)}</div>
+        <div class="actu-date">${a.source || ""}${a.pubDate ? " • " + formatDate(a.pubDate) : ""}</div>
         <div class="actu-desc">${a.desc || ""}</div>
         <div class="actu-links">
           <a class="cta-soft btn-small" target="_blank" rel="noopener" href="${a.link}">Lire</a>
@@ -467,23 +355,12 @@ function renderActu3() {
 async function loadActu(showNotif = true) {
   try {
     if (el.actuStatus) el.actuStatus.textContent = "Chargement des actus…";
-    let all = [];
-    for (const src of ACTU_SOURCES) {
-      try {
-        const txt = await fetchRss(src);
-        all = all.concat(parseRss(txt));
-      } catch {}
-    }
+    const r = await fetch("/.netlify/functions/news", { cache: "no-store" });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "news");
 
-    if (!all.length) {
-      all = [
-        { title:"Actu surf indisponible (CORS/source)", link:"actu.html", pubDate:new Date().toISOString(), desc:"Change des sources RSS dans script.js (ACTU_SOURCES).", img:"" }
-      ];
-    }
-
-    all.sort((a,b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
     const prevTop = actuItems[0]?.title || "";
-    actuItems = all.slice(0, 30);
+    actuItems = (j.items || []).slice(0, 30);
     actuIndex = 0;
     renderActu3();
 
@@ -491,84 +368,119 @@ async function loadActu(showNotif = true) {
       el.newsNotifSub.textContent = actuItems[0].title.slice(0, 70);
       el.newsNotif.classList.remove("hidden");
     }
-  } catch (e) {
+  } catch {
     if (el.actuStatus) el.actuStatus.textContent = "Impossible de récupérer les actus.";
   }
 }
 
-if (el.actuPrev) el.actuPrev.addEventListener("click", () => {
-  actuIndex = Math.max(0, actuIndex - 3);
-  renderActu3();
-});
-if (el.actuNext) el.actuNext.addEventListener("click", () => {
-  actuIndex = Math.min(Math.max(0, actuItems.length - 3), actuIndex + 3);
-  renderActu3();
-});
-if (el.actuRefresh) el.actuRefresh.addEventListener("click", async () => {
-  await runRefreshCountdown(() => loadActu(false));
-});
-if (el.newsNotif) el.newsNotif.addEventListener("click", () => {
-  el.newsNotif.classList.add("hidden");
-  window.location.href = "actu.html";
-});
+function runRefreshCountdown(onDone) {
+  if (!el.refreshOverlay || !el.refreshCount) return onDone?.();
+  el.refreshOverlay.classList.remove("hidden");
+  let n = 3;
+  el.refreshCount.textContent = String(n);
+  const t = setInterval(() => {
+    n -= 1;
+    el.refreshCount.textContent = String(n);
+    if (n <= 0) {
+      clearInterval(t);
+      el.refreshOverlay.classList.add("hidden");
+      onDone?.();
+    }
+  }, 1000);
+}
+
+if (el.actuPrev) el.actuPrev.addEventListener("click", () => { actuIndex = Math.max(0, actuIndex - 3); renderActu3(); });
+if (el.actuNext) el.actuNext.addEventListener("click", () => { actuIndex = Math.min(Math.max(0, actuItems.length - 3), actuIndex + 3); renderActu3(); });
+if (el.actuRefresh) el.actuRefresh.addEventListener("click", () => runRefreshCountdown(() => loadActu(false)));
+if (el.newsNotif) el.newsNotif.addEventListener("click", () => { el.newsNotif.classList.add("hidden"); window.location.href = "actu.html"; });
 
 /* -----------------------------
-   Login UI (local)
+   Login modal -> backend
 ------------------------------ */
-function getLogin() {
-  try { return JSON.parse(localStorage.getItem(LS_LOGIN) || "null"); } catch { return null; }
-}
-function setLogin(v) {
-  localStorage.setItem(LS_LOGIN, JSON.stringify(v));
-}
 function openLogin() {
-  el.loginModal.classList.remove("hidden");
-  const me = getLogin();
-  el.loginState.textContent = me?.email ? `Connecté: ${me.email}` : "—";
+  el.loginModal?.classList.remove("hidden");
+  if (el.loginState) el.loginState.textContent = isAuthed() ? `Connecté: ${getEmail()}` : "—";
 }
-function closeLogin() {
-  el.loginModal.classList.add("hidden");
+function closeLogin() { el.loginModal?.classList.add("hidden"); }
+
+function bindLoginButtonsFromNavbar() {
+  // navbar est injectée par common.js, donc le bouton arrive après DOMContentLoaded
+  const btn = document.getElementById("login-open");
+  if (btn) {
+    btn.addEventListener("click", openLogin);
+  }
 }
-if (el.loginOpen) el.loginOpen.addEventListener("click", openLogin);
+
 if (el.loginClose) el.loginClose.addEventListener("click", closeLogin);
-el.loginModal?.addEventListener("click", (e) => {
-  if (e.target === el.loginModal) closeLogin();
-});
+el.loginModal?.addEventListener("click", (e) => { if (e.target === el.loginModal) closeLogin(); });
+
 if (el.tabLogin && el.tabSignup) {
   el.tabLogin.addEventListener("click", () => {
     el.tabLogin.classList.add("active");
     el.tabSignup.classList.remove("active");
     el.signupExtra.classList.add("hidden");
+    el.loginHint.textContent = "Connexion → favoris multi-device";
   });
   el.tabSignup.addEventListener("click", () => {
     el.tabSignup.classList.add("active");
     el.tabLogin.classList.remove("active");
     el.signupExtra.classList.remove("hidden");
+    el.loginHint.textContent = "Inscription → crée ton compte";
   });
 }
-if (el.loginSave) el.loginSave.addEventListener("click", () => {
-  const email = (el.loginEmail.value || "").trim();
+
+if (el.loginSave) el.loginSave.addEventListener("click", async () => {
+  const email = (el.loginEmail.value || "").trim().toLowerCase();
   const pass = (el.loginPass.value || "").trim();
   const isSignup = !el.signupExtra.classList.contains("hidden");
+
   if (!email || !pass) return toast("Email + mot de passe requis");
   if (isSignup) {
     const p2 = (el.signupPass2.value || "").trim();
     if (p2 !== pass) return toast("Les mots de passe ne correspondent pas");
   }
-  setLogin({ email });
-  el.loginState.textContent = `Connecté: ${email}`;
-  toast(isSignup ? "Compte créé (local)" : "Connecté (local)");
-  setTimeout(closeLogin, 650);
+
+  try {
+    const r = await fetch("/.netlify/functions/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: isSignup ? "register" : "login", email, password: pass })
+    });
+    const j = await r.json();
+    if (!j.ok) return toast(j.error || "Erreur connexion");
+
+    setToken(j.token);
+    setEmail(j.email);
+    if (el.loginState) el.loginState.textContent = `Connecté: ${j.email}`;
+    toast(isSignup ? "Compte créé ✅" : "Connecté ✅");
+
+    await favsFetch();
+    setTimeout(closeLogin, 500);
+  } catch {
+    toast("Erreur réseau (auth)");
+  }
 });
 
 /* -----------------------------
    Init
 ------------------------------ */
-(function init() {
-  document.body.style.paddingTop = "72px";
-
+document.addEventListener("DOMContentLoaded", async () => {
+  bindLoginButtonsFromNavbar();
   initMap();
-  renderSpotUI();
-  renderFavs();
-  loadActu(true);
-})();
+  renderSpotList();
+
+  // Favoris: charge depuis serveur si connecté
+  try { await favsFetch(); } catch {}
+
+  // Actus: charge + auto-refresh toutes les 5 minutes
+  await loadActu(true);
+  setInterval(() => loadActu(false), 5 * 60 * 1000);
+
+  // Fix pour éviter flash scroll
+  let scrollTimer = null;
+  window.addEventListener("scroll", () => {
+    document.body.classList.add("is-scrolling");
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 120);
+  }, { passive:true });
+});

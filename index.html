@@ -13,10 +13,9 @@
 </head>
 
 <body>
-
-  <!-- ✅ Navbar injectée par common.js -->
   <header id="navbar"></header>
 
+  <!-- HERO (nouvelle DA) -->
   <section class="hero hero-dark hero-center">
     <div class="hero-inner">
       <div class="hero-live-badge">
@@ -24,80 +23,70 @@
         <span class="live-text">LIVE</span>
       </div>
 
-      <h1 class="animated-title hero-title-center">
-        Prévisions surf ultra lisibles.<br>
-        <span>Ultra visuelles.</span>
+      <h1 class="hero-title-premium">
+        Prévisions surf <span class="hero-glow">ultra lisibles</span><br>
+        <span class="hero-grad">ultra visuelles</span>.
       </h1>
 
       <p class="hero-copy hero-copy-center">
-        Choisis un spot, vois les conditions d’aujourd’hui + semaine, ajoute en favori et ouvre les caméras.
+        Swipe tes spots, focus carte, conditions premium — en 2 clics.
       </p>
 
       <div class="hero-actions hero-actions-center">
-        <button id="go-map" class="btn-hero" type="button">
-          <span>Voir les conditions</span>
+        <button id="go-map" class="btn-hero btn-hero-premium" type="button">
+          <span>Voir conditions</span>
           <span class="btn-hero-ico">↓</span>
         </button>
       </div>
     </div>
   </section>
 
+  <!-- MAP + SWIPE -->
   <section class="hero-map-wrap" id="map">
     <div class="map-header">
-      <h2 class="map-title">Trouve ton spot de surf</h2>
-      <p class="map-subtitle">Recherche un spot, focus carte, accès direct aux conditions.</p>
+      <h2 class="map-title">Carte + spots</h2>
+      <p class="map-subtitle">Swipe la liste → clique un spot → popup premium.</p>
     </div>
 
-    <div class="map-layout map-layout-simple">
-      <div class="map-container">
-        <div class="search-wrap">
-          <input
-            type="text"
-            id="spot-search"
-            placeholder="🔍 Rechercher un spot (ex : Lacanau, Gravière, La Torche...)"
-            autocomplete="off"
-          />
-          <button id="search-clear" class="search-clear hidden" type="button" title="Effacer la recherche">✕</button>
+    <div class="map-layout map-layout-focus">
+      <div class="map-container premium-map">
+        <div class="map-hint">
+          <div class="hint-pill">👆 Swipe la liste à droite</div>
+          <div class="hint-sub">Puis clique un spot pour le focus</div>
         </div>
 
         <div id="surf-map"></div>
-
-        <div class="map-bottom">
-          <div class="panel-title panel-title-alt">Tous les spots</div>
-          <select id="spot-select" class="spot-select">
-            <option value="">— Choisir un spot —</option>
-          </select>
-          <div class="panel-help">Choisir = focus + popup premium.</div>
-        </div>
       </div>
 
       <aside class="side-panel">
         <div class="panel-card">
-          <div class="panel-title panel-title-alt">Liste spots</div>
-          <div class="panel-help">Scroll la liste • clic = focus carte + popup.</div>
-          <div id="spot-list" class="spot-list spot-list-scroll compact"></div>
+          <div class="panel-title panel-title-alt">Swipe spots</div>
+          <div class="panel-help">Scroll/Swipe vertical • clic = focus carte</div>
+          <div id="spot-list" class="spot-list spot-list-scroll swipe-strong"></div>
         </div>
       </aside>
     </div>
   </section>
 
+  <!-- FAVORIS -->
   <section id="favorites" class="favorites-section">
     <div class="section-head">
       <h2 class="section-title">❤️ Mes favoris</h2>
-      <div class="section-sub">Stocké sur ton appareil (local)</div>
+      <div class="section-sub">Persistants (compte) • multi-device</div>
     </div>
 
     <div id="favorites-empty" class="empty-state">
-      Aucun favori pour le moment. Ajoute-en depuis la carte ou depuis un spot.
+      Connecte-toi pour retrouver tes favoris partout.
     </div>
 
     <div id="favorites-list" class="favorites-list"></div>
   </section>
 
+  <!-- ACTU -->
   <section class="actu-section" id="home-actu">
     <div class="section-head">
-      <h2 class="section-title">📰 Actu surf</h2>
-      <div class="section-sub">3 actus visibles • mise à jour fréquente</div>
+      <h2 class="section-title">📰 Top actus surf</h2>
+      <div class="section-sub">Auto-refresh • extrait premium</div>
     </div>
 
     <div class="actu-actions">
@@ -116,6 +105,7 @@
     <div id="news-notif-sub" class="news-notif-sub">Clique pour voir</div>
   </button>
 
+  <!-- LOGIN MODAL (maintenant réel via Functions) -->
   <div id="login-modal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -129,7 +119,7 @@
       </div>
 
       <div class="modal-body">
-        <div class="muted">Compte local (pas de backend pour l’instant).</div>
+        <div class="muted" id="login-hint">Connexion → favoris multi-device</div>
 
         <label class="field">
           <span>Email</span>
