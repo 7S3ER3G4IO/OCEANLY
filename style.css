@@ -2008,3 +2008,129 @@ main{
 #module-today.is-bad{
   border-color: rgba(239,68,68,.22);
 }
+/* ===== Conditions: Aujourd’hui carré + 7 jours vertical ===== */
+
+.today-square{ padding: 16px; }
+.today-grid{
+  display:grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+@media (max-width: 860px){
+  .today-grid{ grid-template-columns: 1fr; }
+}
+
+.today-main, .today-side{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  padding: 12px;
+}
+
+.today-row{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.today-row:last-child{ border-bottom: none; }
+.today-label{
+  opacity:.82;
+  font-size: 12px;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+.today-val{
+  font-weight: 950;
+  color: #fff;
+}
+
+.today-quality .badge{ font-size: 12px; }
+.score-big{
+  font-size: 28px;
+  font-weight: 950;
+  color:#fff;
+  margin-top: 4px;
+}
+
+.tide-box{
+  margin-top: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(168,85,247,.22);
+  background: rgba(168,85,247,.06);
+  box-shadow: 0 0 22px rgba(168,85,247,.10);
+  padding: 12px;
+}
+.tide-top{ display:flex; justify-content:space-between; align-items:center; }
+.tide-title{ font-weight: 950; color:#fff; }
+.tide-state{ font-weight: 950; color:#fff; }
+.tide-next{ margin-top: 8px; opacity:.9; }
+.tide-timer{ margin-top: 6px; font-weight: 950; color:#fff; }
+.tide-bar{
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  overflow:hidden;
+}
+.tide-bar__fill{
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: rgba(168,85,247,.85);
+  box-shadow: 0 0 18px rgba(168,85,247,.25);
+}
+
+/* 7 jours vertical swipe */
+.week-vert{
+  display:grid;
+  gap: 10px;
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.week-daycard{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  padding: 12px;
+  display:grid;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.week-daycard:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.28); }
+
+.week-line1{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.week-date{ font-weight: 950; color:#fff; }
+.week-mini{ opacity:.85; font-size: 13px; }
+.week-kpis{ display:flex; flex-wrap:wrap; gap: 8px; margin-top: 4px; }
+.week-pill{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  font-weight: 900;
+  font-size: 12px;
+}
+.tide-approx{
+  opacity: .75;
+  font-weight: 900;
+  font-size: 12px;
+  margin-left: 6px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.tide-note{
+  margin-top: 8px;
+  opacity: .78;
+  font-size: 12px;
+  line-height: 1.35;
+}
