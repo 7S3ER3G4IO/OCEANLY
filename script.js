@@ -177,11 +177,18 @@ function setActivePin(slug) {
 function openSpotPopup(slug, panTo = false) {
   const s = SPOTS.find(x => x.slug === slug);
   const m = markers.get(slug);
-  if (!s || !m) return;
+  if (!s || !m || !map) return;
 
   setActivePin(slug);
-  if (panTo) map.setView([s.lat, s.lon], Math.max(map.getZoom(), 9), { animate:true });
 
+  // ✅ Zoom + centre propre (avec offset pour laisser la popup visible)
+  const targetZoom = Math.max(map.getZoom(), 10);
+
+  if (panTo) {
+    map.flyTo([s.lat, s.lon], targetZoom, { animate: true, duration: 0.85 });
+  }
+
+  // ✅ popup: PAS de région (Gironde/Landes supprimé)
   const favOn = isFav(slug);
   const favClass = favOn ? "on" : "";
   const favText = favOn ? "Favori ✅" : "Favori";
@@ -191,24 +198,42 @@ function openSpotPopup(slug, panTo = false) {
       <div class="popup-title">${s.name}</div>
       <div class="popup-badges">
         <span class="badge live"><span class="dot"></span> LIVE</span>
-        <span class="badge">${s.region}</span>
       </div>
       <div class="popup-actions">
-        <a class="popup-btn popup-btn-blue" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
-        <a class="popup-btn popup-btn-red" href="camera.html?spot=${encodeURIComponent(s.slug)}">Caméra</a>
+        <a class="popup-btn popup-btn-conditions" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
+        <a class="popup-btn popup-btn-camera" href="camera.html?spot=${encodeURIComponent(s.slug)}">Caméra</a>
         <button class="popup-btn popup-btn-fav ${favClass}" data-fav="${s.slug}" type="button">${favText}</button>
       </div>
       <div class="popup-hint">Swipe spots → clic → popup premium.</div>
     </div>
   `;
 
-  m.bindPopup(html, { closeButton:true, autoPan:true }).openPopup();
+  m.bindPopup(html, {
+    closeButton: true,
+    autoPan: true,
+    autoPanPaddingTopLeft: [20, 20],
+    autoPanPaddingBottomRight: [20, 20],
+    keepInView: true
+  }).openPopup();
 
+  // ✅ Re-centrage après ouverture (pour éviter popup en haut/gauche)
+  // On pousse un peu vers le haut pour "centrer" visuellement la popup.
+  setTimeout(() => {
+    map.panTo([s.lat, s.lon], { animate: true });
+    map.panBy([0, -90], { animate: true }); // <-- ajuste si tu veux plus/moins
+  }, 250);
+
+  // bind favori
   setTimeout(() => {
     const btn = document.querySelector(`button[data-fav="${CSS.escape(s.slug)}"]`);
-    if (btn) btn.addEventListener("click", (e) => { e.preventDefault(); toggleFav(s.slug); });
+    if (!btn) return;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleFav(s.slug);
+    });
   }, 0);
 }
+
 
 function initMap() {
   if (!el.mapEl || typeof L === "undefined") return;

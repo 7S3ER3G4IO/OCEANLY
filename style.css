@@ -1589,36 +1589,130 @@ main{
   to{ width: 420px; height: 420px; opacity: 0; }
 }
 
-/* ===== HERO2 title: plus large + 1 ligne desktop ===== */
+/* =========================================================
+   MAP + SWIPE : même hauteur + map plus grande + align bas
+   + POPUP premium (texte blanc + rouge)
+   ========================================================= */
 
-.hero2__wrap{
-  width: min(1180px, calc(100% - 48px)); /* plus large */
+:root{
+  --mapH: 520px;      /* hauteur desktop map + swipe */
+  --mapH-md: 460px;   /* tablette */
+  --mapH-sm: 380px;   /* mobile */
 }
 
-.hero2__title{
-  font-size: clamp(38px, 4.8vw, 64px);  /* plus grand */
-  max-width: 1180px;
+/* aligne la map et le panel à la même hauteur */
+.map-layout-focus{
+  align-items: stretch !important;  /* force même hauteur */
 }
 
-/* Desktop: titre en une ligne (si place) */
-.hero2__titleLine{
-  display: inline;   /* au lieu de block */
+/* map un peu plus grande et propre */
+.premium-map{
+  max-width: 1040px !important;      /* augmente un peu */
+  height: var(--mapH) !important;
 }
 
-/* Ajoute des séparateurs visuels */
-.hero2__titleLine + .hero2__titleLine::before{
-  content: " · ";
-  opacity: .35;
-  margin: 0 .18em;
+#surf-map{
+  height: var(--mapH) !important;
+  min-height: var(--mapH) !important;
 }
 
-/* Mobile: on repasse en lignes pour que ça reste beau */
-@media (max-width: 720px){
-  .hero2__titleLine{
-    display: block;
-  }
-  .hero2__titleLine + .hero2__titleLine::before{
-    content: "";
-    margin: 0;
-  }
+/* panel swipe même hauteur que map */
+.side-panel,
+.panel-card{
+  height: var(--mapH) !important;
+}
+
+.spot-list-scroll{
+  height: calc(var(--mapH) - 70px) !important; /* laisse place au titre/texte du panel */
+  overflow: auto !important;
+  padding-right: 6px;
+}
+
+/* responsive */
+@media (max-width: 980px){
+  .premium-map,
+  #surf-map,
+  .side-panel,
+  .panel-card{ height: var(--mapH-md) !important; }
+  .spot-list-scroll{ height: calc(var(--mapH-md) - 70px) !important; }
+}
+@media (max-width: 520px){
+  .premium-map,
+  #surf-map{ height: var(--mapH-sm) !important; min-height: var(--mapH-sm) !important; }
+  .side-panel,
+  .panel-card{ height: auto !important; }
+  .spot-list-scroll{ height: auto !important; }
+}
+
+/* =========================================================
+   POPUP : texte blanc + live rouge + camera rouge + pas de région
+   ========================================================= */
+
+.leaflet-popup-content-wrapper{
+  background: rgba(8, 10, 14, .88) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  backdrop-filter: blur(14px) !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 26px 70px rgba(0,0,0,.55) !important;
+  border-radius: 18px !important;
+}
+.leaflet-popup-tip{
+  background: rgba(8, 10, 14, .88) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.popup-dark{ color: rgba(255,255,255,.92) !important; }
+.popup-title{
+  color: #fff !important;
+  font-weight: 900 !important;
+  letter-spacing: -.01em;
+}
+
+/* badges */
+.badge{
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  background: rgba(255,255,255,.06) !important;
+}
+.badge.live{
+  border-color: rgba(239,68,68,.25) !important;
+  box-shadow: 0 0 18px rgba(239,68,68,.18) !important;
+}
+.badge.live .dot{
+  background: rgba(239,68,68,1) !important;
+  box-shadow: 0 0 16px rgba(239,68,68,.55) !important;
+}
+
+/* boutons */
+.popup-actions{ gap: 10px !important; }
+.popup-btn{
+  color: #fff !important;                 /* ✅ texte blanc */
+  border: 1px solid rgba(255,255,255,.10) !important;
+  background: rgba(255,255,255,.06) !important;
+  backdrop-filter: blur(10px);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.popup-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 14px 28px rgba(0,0,0,.35);
+}
+.popup-btn:active{ transform: scale(.99); opacity: .92; }
+
+/* Conditions: neutre (blanc) */
+.popup-btn-conditions{
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08) !important;
+}
+
+/* Caméra: lueur rouge */
+.popup-btn-camera{
+  border-color: rgba(239,68,68,.25) !important;
+  box-shadow: 0 0 18px rgba(239,68,68,.16) !important;
+}
+.popup-btn-camera:hover{
+  box-shadow: 0 0 0 1px rgba(239,68,68,.22), 0 18px 38px rgba(0,0,0,.45) !important;
+}
+
+/* Favori: état ON */
+.popup-btn-fav.on{
+  border-color: rgba(56,189,248,.22) !important;
+  box-shadow: 0 0 18px rgba(56,189,248,.14) !important;
 }
