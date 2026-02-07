@@ -9,100 +9,178 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
+
+  <!-- ✅ Mini styles uniquement pour le Signal + Marée (dans ta DA) -->
+  <style>
+    .signal-box{
+      margin: 10px 0 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .signal-left{display:flex; align-items:center; gap:10px;}
+    .signal-ico{
+      width:34px;height:34px;border-radius:14px;
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      font-size:18px;
+    }
+    .signal-title{font-weight:950; letter-spacing:.04em;}
+    .signal-sub{margin-top:4px; font-size:12px; opacity:.78; line-height:1.35;}
+    .signal-right{font-weight:950; opacity:.92;}
+
+    .glow-green{ border-color: rgba(34,197,94,.28); box-shadow:0 0 26px rgba(34,197,94,.16); }
+    .glow-cyan { border-color: rgba(56,189,248,.26); box-shadow:0 0 24px rgba(56,189,248,.14); }
+    .glow-amber{ border-color: rgba(245,158,11,.26); box-shadow:0 0 24px rgba(245,158,11,.14); }
+    .glow-purple{ border-color: rgba(168,85,247,.30); box-shadow:0 0 32px rgba(168,85,247,.18); }
+
+    .pulse{ animation:pulseGlow 1.25s ease-in-out infinite; }
+    @keyframes pulseGlow{ 0%{transform:scale(1)} 50%{transform:scale(1.01)} 100%{transform:scale(1)} }
+
+    .tide-approx{
+      opacity:.78;
+      font-weight:900;
+      font-size:12px;
+      margin-left:6px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+  </style>
 </head>
 
 <body>
-  <!-- ✅ Navbar injectée -->
-  <header id="navbar"></header>
-
-  <main class="spot-wrap">
-    <div class="spot-top">
-      <div class="spot-headline">
-        <h1 id="spot-title">—</h1>
-        <p id="spot-sub">—</p>
-      </div>
-
-      <div class="spot-actions">
-        <button id="btn-refresh" class="cta-soft btn-small btn-conditions" type="button">Rafraîchir</button>
-        <button id="btn-fav" class="cta-soft btn-small" type="button">❤️ Favori</button>
-        <a id="btn-camera" class="cta-soft btn-small btn-camera" href="camera.html">Regarder caméra</a>
+  <header class="navbar" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
       </div>
     </div>
 
-    <section class="spot-grid">
-      <div class="card">
-        <h2 class="spot-h2">Aujourd’hui</h2>
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="index.html#map">Carte</a>
+      <a href="index.html#favorites">Favoris</a>
+      <a href="camera.html">Caméra</a>
+      <a href="actu.html">Actu</a>
+    </nav>
 
-        <div class="kpi-grid">
-          <div class="kpi"><div class="label">Qualité</div><div class="val" id="k-quality">—</div></div>
-          <div class="kpi"><div class="label">Vagues</div><div class="val" id="k-swell">—</div></div>
-          <div class="kpi"><div class="label">Période</div><div class="val" id="k-period">—</div></div>
-          <div class="kpi"><div class="label">Vent</div><div class="val" id="k-wind">—</div></div>
-          <div class="kpi"><div class="label">Note</div><div class="val" id="k-score">—</div></div>
-          <div class="kpi"><div class="label">Confiance</div><div class="val" id="k-confidence">—</div></div>
+    <div class="nav-actions">
+      <a class="cta-soft btn-small" href="index.html">← Retour</a>
+    </div>
+  </header>
+
+  <main class="spot-page">
+    <div class="spot-shell">
+
+      <div class="spot-hero-top">
+        <div>
+          <div class="spot-kicker">LIVE</div>
+          <h1 class="spot-title" id="spot-title">—</h1>
+          <p class="spot-sub" id="spot-sub">—</p>
         </div>
 
-        <div class="tide-box" id="k-next-window">Prochain bon créneau : —</div>
-        <div class="tide-box" id="k-tide">Marée : —</div>
-
-        <div class="spot-week">
-          <h2 class="spot-h2" style="margin-top:18px;">Semaine (7 jours)</h2>
-          <div class="muted small">Bandeau scroll horizontal • clic = voir le détail en bas</div>
-          <div id="week-strip" class="week-strip"></div>
+        <div class="spot-hero-actions">
+          <button id="btn-refresh" class="cta-soft btn-small btn-conditions" type="button">Rafraîchir</button>
+          <button id="btn-fav" class="cta-soft btn-small" type="button">❤️ Favori</button>
+          <a id="btn-camera" class="cta-soft btn-small btn-camera" href="camera.html">Regarder caméra</a>
         </div>
       </div>
 
-      <div class="card mini-map">
-        <h2 class="spot-h2">Mini-map du spot</h2>
-        <div id="mini-map"></div>
-        <div class="muted small" style="margin-top:10px;">Localisation du spot.</div>
+      <section class="spot-grid">
+        <!-- LEFT: Conditions -->
+        <div class="card">
+          <h2 class="card-title">Aujourd’hui <span class="badge bad" id="live-badge">LIVE</span></h2>
 
-        <div class="details-grid" style="margin-top:14px;">
-          <div class="details-item" style="grid-column:1 / -1;">
-            <h3>Résumé premium</h3>
-            <div class="txt" id="premium-summary">—</div>
-            <div class="muted small" id="k-updated" style="margin-top:10px;">Maj : —</div>
+          <!-- ✅ Signal session (dans ta DA) -->
+          <div id="signal-box" class="signal-box glow-amber">
+            <div class="signal-left">
+              <div id="signal-ico" class="signal-ico">👀</div>
+              <div>
+                <div id="signal-title" class="signal-title">À SURVEILLER</div>
+                <div id="signal-sub" class="signal-sub">Chargement des données temps réel…</div>
+              </div>
+            </div>
+            <div id="signal-right" class="signal-right">—</div>
           </div>
 
-          <div class="details-item">
-            <h3>Pourquoi c’est comme ça ?</h3>
-            <div class="txt" id="why-text">—</div>
+          <!-- KPI grid (ta DA existante) -->
+          <div class="kpi-grid">
+            <div class="kpi"><div class="kpi-label">Qualité</div><div class="kpi-val" id="k-quality">—</div></div>
+            <div class="kpi"><div class="kpi-label">Vagues</div><div class="kpi-val" id="k-swell">—</div></div>
+            <div class="kpi"><div class="kpi-label">Période</div><div class="kpi-val" id="k-period">—</div></div>
+            <div class="kpi"><div class="kpi-label">Vent</div><div class="kpi-val" id="k-wind">—</div></div>
+            <div class="kpi"><div class="kpi-label">Dir vent</div><div class="kpi-val" id="k-winddir">—</div></div>
+            <div class="kpi"><div class="kpi-label">Dir houle</div><div class="kpi-val" id="k-wavedir">—</div></div>
           </div>
 
-          <div class="details-item">
-            <h3>Météo</h3>
-            <div class="txt" id="meteo-text">Air : —<br>Eau : —</div>
+          <div class="tide-box" id="k-next-window">Prochain bon créneau : —</div>
+
+          <!-- ✅ Marée approx: on garde ton module, mais contenu temps réel (timer) -->
+          <div class="tide-box" id="k-tide">
+            Marée : —
+          </div>
+
+          <div class="spot-week">
+            <h2 class="card-title" style="margin-top:18px;">Semaine (7 jours)</h2>
+            <div class="muted small">Bandeau scroll horizontal • clic = détails en bas</div>
+            <div id="week-strip" class="week-strip"></div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="details-grid">
-      <div class="details-item">
-        <h3>Détails du jour</h3>
-        <div class="txt" id="day-details">Clique un jour dans “Semaine (7 jours)” pour voir les détails ici.</div>
-      </div>
+        <!-- RIGHT: Mini-map + premium -->
+        <div class="card">
+          <h2 class="card-title">Mini-map du spot</h2>
+          <div class="mini-map" id="mini-map"></div>
+          <div class="muted small" style="margin-top:10px;">Localisation du spot.</div>
 
-      <div class="details-item">
-        <h3>Chronologie (premium)</h3>
-        <div class="txt" id="timeline-box">—</div>
-      </div>
-    </section>
+          <div class="details-grid" style="margin-top:14px;">
+            <div class="details-item" style="grid-column:1 / -1;">
+              <h3>Résumé premium</h3>
+              <div class="txt" id="premium-summary">—</div>
+              <div class="muted small" id="k-updated" style="margin-top:10px;">Maj : —</div>
+            </div>
+
+            <div class="details-item">
+              <h3>Pourquoi c’est comme ça ?</h3>
+              <div class="txt" id="why-text">—</div>
+            </div>
+
+            <div class="details-item">
+              <h3>Météo</h3>
+              <div class="txt" id="meteo-text">Air : —<br>Vent : —</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="details-grid">
+        <div class="details-item">
+          <h3>Détails du jour</h3>
+          <div class="txt" id="day-details">Clique un jour dans “Semaine (7 jours)” pour voir les détails ici.</div>
+        </div>
+
+        <div class="details-item">
+          <h3>Chronologie (premium)</h3>
+          <div class="txt" id="timeline-box">—</div>
+        </div>
+      </section>
+
+    </div>
   </main>
 
-  <div id="refresh-modal" class="refresh-overlay hidden" role="dialog" aria-modal="true" aria-label="Rafraîchir">
-    <div class="refresh-box">
-      <div class="refresh-title">Rafraîchissement…</div>
-      <div id="refresh-count" class="refresh-count">5</div>
-      <div class="refresh-sub">On recharge les données dans <span id="refresh-sec">5</span>s</div>
-    </div>
-  </div>
-
-  <div id="toast" class="toast hidden"></div>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- IMPORTANT: data.js AVANT spot.js -->
   <script src="data.js"></script>
-  <script src="common.js"></script>
   <script src="spot.js"></script>
 </body>
 </html>
