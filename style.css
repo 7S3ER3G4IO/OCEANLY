@@ -1395,3 +1395,43 @@ main{
 /* Pins glow */
 .pin-glow{ filter: drop-shadow(0 0 14px rgba(56,189,248,.20)); }
 .pin-glow.red{ filter: drop-shadow(0 0 16px rgba(239,68,68,.26)); }
+
+/* =========================
+   FIX FINAL — HERO centré (anti-styles parasites)
+   Colle tout en bas de style.css
+   ========================= */
+
+/* Le hero prend toute la largeur visible */
+.hero,
+.hero-dark,
+.hero-center{
+  width: 100% !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Centre forcé par translation (impossible à décaler) */
+.hero-inner{
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+
+  width: min(980px, calc(100% - 48px)) !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Centre tous les éléments texte */
+.hero-inner > *{
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
