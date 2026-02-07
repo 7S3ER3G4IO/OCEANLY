@@ -447,3 +447,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadActu(true);
   setInterval(() => loadActu(false), 5 * 60 * 1000);
 });
+
+function scrollToMapFixed() {
+  const target = document.getElementById("map");
+  if (!target) return;
+
+  const nav = document.getElementById("navbar");
+  const navH = nav ? nav.getBoundingClientRect().height : 72;
+
+  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 16;
+  window.scrollTo({ top, behavior: "smooth" });
+
+  setTimeout(() => {
+    if (typeof map !== "undefined" && map) map.invalidateSize();
+  }, 700);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const go = document.getElementById("go-map");
+  const live = document.getElementById("hero-live");
+
+  if (go) {
+    go.addEventListener("click", scrollToMapFixed);
+
+    // ripple
+    go.addEventListener("pointerdown", (e) => {
+      const r = go.getBoundingClientRect();
+      const ripple = document.createElement("span");
+      ripple.className = "ripple2";
+      ripple.style.left = `${e.clientX - r.left}px`;
+      ripple.style.top = `${e.clientY - r.top}px`;
+      go.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+
+  if (live) live.addEventListener("click", scrollToMapFixed);
+});
