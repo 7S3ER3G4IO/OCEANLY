@@ -217,6 +217,24 @@ function initMap() {
   );
   map.fitBounds(franceBounds, { padding:[24,24] });
 
+  const btn = document.getElementById("go-map");
+if (btn) {
+  btn.addEventListener("pointerdown", (e) => {
+    const r = btn.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    btn.appendChild(ripple);
+
+    setTimeout(() => ripple.remove(), 600);
+  });
+}
+
+
   // Zoom UI (design via CSS)
   const zoomUI = document.createElement("div");
   zoomUI.className = "zoom-ui-premium";
