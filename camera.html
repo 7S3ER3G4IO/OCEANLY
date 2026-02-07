@@ -11,27 +11,8 @@
 </head>
 <body>
 
-  <header class="navbar navbar-fixed" id="navbar">
-    <div class="logo">
-      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
-      <div class="brand">
-        <div class="brand-name">OCEANLY</div>
-        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
-      </div>
-    </div>
-
-    <nav class="nav-links">
-      <a href="index.html">Accueil</a>
-      <a href="index.html#map">Carte</a>
-      <a href="index.html#favorites">Favoris</a>
-      <a href="camera.html" class="active">Caméra</a>
-      <a href="actu.html">Actu</a>
-    </nav>
-
-    <div class="nav-actions">
-      <button id="login-open" class="nav-login">Se connecter</button>
-    </div>
-  </header>
+  <!-- ✅ Navbar injectée -->
+  <header id="navbar"></header>
 
   <main class="camera-page">
     <div class="camera-head">
@@ -39,7 +20,7 @@
         <span class="live-dot"></span>
         <span class="live-glow">Caméras LIVE</span>
       </div>
-      <div class="muted">Swipe / scroll • choisis un spot • ouvre la bonne caméra (mapping robuste)</div>
+      <div class="muted">Swipe / scroll • choisis un spot • ouvre la bonne caméra</div>
     </div>
 
     <div class="camera-layout">
@@ -63,7 +44,7 @@
           </div>
 
           <div class="muted" style="margin-top:10px;font-size:12px">
-            ⚠️ Si l’embed est bloqué, c’est normal (sécurité du site caméra). L’ouverture externe fonctionne toujours.
+            ⚠️ Si l’embed est bloqué, c’est normal. L’ouverture externe fonctionne toujours.
           </div>
         </div>
       </section>

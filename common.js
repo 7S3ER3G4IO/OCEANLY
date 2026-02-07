@@ -1,32 +1,102 @@
-/* common.js — comportements communs (navbar + scroll) */
+/* =========================
+   OCEANLY — common.js (CLEAN + NETLIFY READY)
+   - Une seule navbar injectée sur toutes les pages
+   - Helpers: APP.apiGet (Netlify Functions ready)
+   - Active link auto + scroll style
+   ========================= */
 
-(function(){
-  const body = document.body;
+(() => {
+  // ---------- API (Netlify Functions) ----------
+  const API_BASE = "/.netlify/functions";
 
-  // anti “flash blanc” / repaint : on réduit le blur pendant scroll rapide
-  let t = null;
-  window.addEventListener("scroll", () => {
-    body.classList.add("is-scrolling");
-    clearTimeout(t);
-    t = setTimeout(() => body.classList.remove("is-scrolling"), 140);
-  }, { passive:true });
-
-  // navbar “active”
-  const path = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-  document.querySelectorAll(".nav-links a[data-page]").forEach(a=>{
-    const p = (a.getAttribute("data-page")||"").toLowerCase();
-    if (!p) return;
-    if (p === path) a.classList.add("active");
-  });
-
-  // smooth scroll for anchors
-  document.querySelectorAll('a[href^="#"]').forEach(a=>{
-    a.addEventListener("click", (e)=>{
-      const id = a.getAttribute("href");
-      const el = document.querySelector(id);
-      if (!el) return;
-      e.preventDefault();
-      el.scrollIntoView({ behavior:"smooth", block:"start" });
+  async function apiGet(functionName, params = {}) {
+    const url = new URL(`${API_BASE}/${functionName}`, window.location.origin);
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
     });
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    return res.json();
+  }
+
+  window.APP = { API_BASE, apiGet };
+
+  // ---------- Navbar (single source of truth) ----------
+  function getPageKey() {
+    const file = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    if (file === "" || file === "index.html") return "home";
+    if (file === "spot.html") return "spot";
+    if (file === "camera.html") return "camera";
+    if (file === "actu.html") return "actu";
+    if (file === "best.html") return "best";
+    return file;
+  }
+
+  function injectNavbar() {
+    const host = document.getElementById("navbar");
+    if (!host) return;
+
+    const page = getPageKey();
+    const isHome = page === "home";
+
+    host.className = "navbar navbar-fixed";
+    host.innerHTML = `
+      <div class="logo">
+        <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+        <div class="brand">
+          <div class="brand-name">OCEANLY</div>
+          <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
+        </div>
+      </div>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html" data-page="home">Accueil</a>
+        <a href="index.html#map" data-page="map">Carte</a>
+        <a href="index.html#favorites" data-page="favorites">Favoris</a>
+        <a href="camera.html" data-page="camera">Caméra</a>
+        <a href="actu.html" data-page="actu">Actu</a>
+      </nav>
+
+      <div class="nav-actions">
+        ${
+          isHome
+            ? `<button id="login-open" class="nav-login" type="button">Se connecter</button>`
+            : `<a class="cta-soft btn-small" href="index.html">← Retour</a>`
+        }
+      </div>
+    `;
+
+    // active link
+    const links = host.querySelectorAll(".nav-links a");
+    links.forEach(a => a.classList.remove("active"));
+
+    if (page === "home") {
+      host.querySelector('.nav-links a[data-page="home"]')?.classList.add("active");
+    } else if (page === "camera") {
+      host.querySelector('.nav-links a[data-page="camera"]')?.classList.add("active");
+    } else if (page === "actu") {
+      host.querySelector('.nav-links a[data-page="actu"]')?.classList.add("active");
+    } else {
+      // pages spot/best => pas dans navbar, on laisse tout off
+    }
+  }
+
+  function bindNavbarScroll() {
+    const nav = document.getElementById("navbar");
+    if (!nav) return;
+    const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  function ensureBodyOffset() {
+    // Evite que le contenu passe sous la navbar fixed
+    document.body.style.paddingTop = "72px";
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    injectNavbar();
+    bindNavbarScroll();
+    ensureBodyOffset();
   });
 })();

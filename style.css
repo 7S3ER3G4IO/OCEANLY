@@ -760,3 +760,9 @@ main{
   width: min(var(--container), calc(100% - 12vw));
   margin: 0 auto;
 }
+
+/* ✅ Center global main content (fallback) */
+main{
+  width: min(var(--container), calc(100% - 12vw));
+  margin: 0 auto;
+}
