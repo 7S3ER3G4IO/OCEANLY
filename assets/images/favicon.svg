@@ -1,0 +1,7 @@
+<svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 25 C20 5, 40 5, 50 25" fill="none" stroke="#38bdf8" stroke-width="3"/>
+  <circle cx="60" cy="20" r="4" fill="#38bdf8"/>
+  <text x="70" y="26" fill="white" font-size="16" font-family="Inter, sans-serif" font-weight="700">
+    OCEANLY
+  </text>
+</svg>

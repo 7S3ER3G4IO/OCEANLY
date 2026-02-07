@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCEANLY — Caméras LIVE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR (identique partout) -->
+  <header class="navbar" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html" data-page="index.html">Accueil</a>
+      <a href="index.html#map" data-page="index.html">Carte</a>
+      <a href="index.html#favorites" data-page="index.html">Favoris</a>
+      <a href="camera.html" data-page="camera.html">Caméra</a>
+      <a href="actu.html" data-page="actu.html">Actu</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button id="login-open" class="nav-login">Se connecter</button>
+    </div>
+  </header>
+
+  <main class="camera-page">
+    <div class="camera-head">
+      <div class="camera-title">
+        <span class="live-dot"></span>
+        <span class="live-glow">Caméras LIVE</span>
+      </div>
+      <div class="muted">Swipe / scroll • choisis un spot • ouvre la bonne caméra (mapping robuste)</div>
+    </div>
+
+    <div class="camera-layout">
+      <section class="camera-list panel-card">
+        <div class="panel-title panel-title-alt">SPOTS</div>
+        <div class="panel-help">Scroll interne • clic = sélection</div>
+        <div id="camera-spot-list" class="spot-list spot-list-scroll"></div>
+      </section>
+
+      <section class="camera-view panel-card">
+        <div class="panel-title panel-title-alt">CAMÉRA</div>
+        <div class="panel-help">Embed souvent bloqué (X-Frame-Options). On ouvre donc la page officielle.</div>
+
+        <div id="camera-selected" class="camera-selected">
+          <div class="big-name" id="cam-name">Sélectionne un spot à gauche.</div>
+          <div class="muted" id="cam-meta">—</div>
+
+          <div class="camera-actions">
+            <a id="cam-open" class="cta-soft btn-camera" href="#" target="_blank" rel="noopener">Ouvrir sur ViewSurf (LIVE)</a>
+            <a id="cam-conditions" class="cta-soft btn-conditions" href="#">Voir conditions</a>
+          </div>
+
+          <div class="muted" style="margin-top:10px;font-size:12px">
+            ⚠️ Si l’embed est bloqué, c’est normal (sécurité du site caméra). L’ouverture externe fonctionne toujours.
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="common.js"></script>
+  <script src="camera.js"></script>
+</body>
+</html>

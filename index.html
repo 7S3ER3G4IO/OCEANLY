@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCEANLY — Prévisions surf</title>
+
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- NAVBAR (IDENTIQUE PARTOUT) -->
+  <header class="navbar navbar-fixed" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
+      </div>
+    </div>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html" data-page="home">Accueil</a>
+      <a href="#map" data-page="map">Carte</a>
+      <a href="#favorites" data-page="favorites">Favoris</a>
+      <a href="camera.html" data-page="camera">Caméra</a>
+      <a href="actu.html" data-page="actu">Actu</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button id="login-open" class="nav-login">Se connecter</button>
+    </div>
+  </header>
+
+  <!-- HERO (TEXTE CENTRÉ + 1 BOUTON PREMIUM) -->
+  <section class="hero hero-dark hero-center">
+    <div class="hero-inner">
+      <div class="hero-live-badge">
+        <span class="live-dot"></span>
+        <span class="live-text">LIVE</span>
+      </div>
+
+      <h1 class="animated-title hero-title-center">
+        Prévisions surf ultra lisibles.<br>
+        <span>Ultra visuelles.</span>
+      </h1>
+
+      <p class="hero-copy hero-copy-center">
+        Choisis un spot, vois les conditions d’aujourd’hui + semaine, ajoute en favori et ouvre les caméras.
+      </p>
+
+      <div class="hero-actions hero-actions-center">
+        <button id="go-map" class="btn-hero">
+          <span>Voir les conditions</span>
+          <span class="btn-hero-ico">↓</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP (DOIT ÊTRE JUSTE APRÈS LE HERO) -->
+  <section class="hero-map-wrap" id="map">
+    <div class="map-header">
+      <h2 class="map-title">Trouve ton spot de surf</h2>
+      <p class="map-subtitle">Recherche un spot, focus carte, accès direct aux conditions.</p>
+    </div>
+
+    <div class="map-layout map-layout-simple">
+      <div class="map-container">
+        <div class="search-wrap">
+          <input
+            type="text"
+            id="spot-search"
+            placeholder="🔍 Rechercher un spot (ex : Lacanau, Gravière, La Torche...)"
+            autocomplete="off"
+          />
+          <button id="search-clear" class="search-clear hidden" type="button" title="Effacer la recherche">✕</button>
+        </div>
+
+        <div id="surf-map"></div>
+
+        <div class="map-bottom">
+          <div class="panel-title panel-title-alt">Tous les spots</div>
+          <select id="spot-select" class="spot-select">
+            <option value="">— Choisir un spot —</option>
+          </select>
+          <div class="panel-help">Choisir = focus + popup premium.</div>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="panel-card">
+          <div class="panel-title panel-title-alt">Liste spots</div>
+          <div class="panel-help">Scroll la liste • clic = focus carte + popup.</div>
+          <div id="spot-list" class="spot-list spot-list-scroll compact"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- FAVORITES -->
+  <section id="favorites" class="favorites-section">
+    <div class="section-head">
+      <h2 class="section-title">❤️ Mes favoris</h2>
+      <div class="section-sub">Stocké sur ton appareil (local)</div>
+    </div>
+
+    <div id="favorites-empty" class="empty-state">
+      Aucun favori pour le moment. Ajoute-en depuis la carte ou depuis un spot.
+    </div>
+
+    <div id="favorites-list" class="favorites-list"></div>
+  </section>
+
+  <!-- ACTU -->
+  <section class="actu-section" id="home-actu">
+    <div class="section-head">
+      <h2 class="section-title">📰 Actu surf</h2>
+      <div class="section-sub">3 actus visibles • mise à jour fréquente</div>
+    </div>
+
+    <div class="actu-actions">
+      <button id="actu-prev" class="cta-soft btn-small" type="button">←</button>
+      <button id="actu-refresh" class="cta-soft btn-conditions btn-small" type="button">Rafraîchir</button>
+      <button id="actu-next" class="cta-soft btn-small" type="button">→</button>
+      <a class="cta-soft btn-small" href="actu.html">En savoir plus</a>
+    </div>
+
+    <div id="actu-grid" class="actu-grid"></div>
+    <div class="muted" id="actu-status" style="margin-top:10px;">—</div>
+  </section>
+
+  <!-- NEWS NOTIF (SIDE) -->
+  <button id="news-notif" class="news-notif hidden" type="button">
+    <div class="news-notif-title">📰 Nouvelle actu surf</div>
+    <div id="news-notif-sub" class="news-notif-sub">Clique pour voir</div>
+  </button>
+
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">Compte</div>
+        <button id="login-close" class="modal-close" type="button">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button id="tab-login" class="tab-btn active" type="button">Connexion</button>
+        <button id="tab-signup" class="tab-btn" type="button">Inscription</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="muted">Compte local (pas de backend pour l’instant).</div>
+
+        <label class="field">
+          <span>Email</span>
+          <input id="login-email" type="email" placeholder="ex: max@mail.com">
+        </label>
+
+        <label class="field">
+          <span>Mot de passe</span>
+          <input id="login-pass" type="password" placeholder="••••••••">
+        </label>
+
+        <div id="signup-extra" class="hidden">
+          <label class="field">
+            <span>Confirmer le mot de passe</span>
+            <input id="signup-pass2" type="password" placeholder="••••••••">
+          </label>
+        </div>
+
+        <button id="login-save" class="primary modal-cta" type="button">Valider</button>
+
+        <div id="login-state" class="muted" style="margin-top:10px;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFRESH MODAL (5s) -->
+  <div id="refresh-overlay" class="refresh-overlay hidden" aria-live="polite">
+    <div class="refresh-box">
+      <div class="refresh-title">Mise à jour</div>
+      <div id="refresh-count" class="refresh-count">5</div>
+      <div class="refresh-sub">Actualisation des données…</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

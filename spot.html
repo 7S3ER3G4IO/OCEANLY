@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCEANLY — Conditions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="navbar" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="index.html#map">Carte</a>
+      <a href="index.html#favorites">Favoris</a>
+      <a href="camera.html">Caméra</a>
+      <a href="actu.html">Actu</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="cta-soft btn-small" href="index.html">← Retour</a>
+    </div>
+  </header>
+
+  <main class="spot-wrap">
+    <div class="spot-top">
+      <div class="spot-headline">
+        <h1 id="spot-title">—</h1>
+        <p id="spot-sub">—</p>
+      </div>
+
+      <div class="spot-actions">
+        <button id="btn-refresh" class="cta-soft btn-small btn-conditions" type="button">Rafraîchir</button>
+        <button id="btn-fav" class="cta-soft btn-small" type="button">❤️ Favori</button>
+        <a id="btn-camera" class="cta-soft btn-small btn-camera" href="camera.html">Regarder caméra</a>
+      </div>
+    </div>
+
+    <section class="spot-grid">
+      <div class="card">
+        <h2 class="spot-h2">Aujourd’hui</h2>
+
+        <div class="kpi-grid">
+          <div class="kpi"><div class="label">Qualité</div><div class="val" id="k-quality">—</div></div>
+          <div class="kpi"><div class="label">Vagues</div><div class="val" id="k-swell">—</div></div>
+          <div class="kpi"><div class="label">Période</div><div class="val" id="k-period">—</div></div>
+          <div class="kpi"><div class="label">Vent</div><div class="val" id="k-wind">—</div></div>
+          <div class="kpi"><div class="label">Note</div><div class="val" id="k-score">—</div></div>
+          <div class="kpi"><div class="label">Confiance</div><div class="val" id="k-confidence">—</div></div>
+        </div>
+
+        <div class="tide-box" id="k-next-window">Prochain bon créneau : —</div>
+        <div class="tide-box" id="k-tide">Marée : —</div>
+
+        <div class="spot-week">
+          <h2 class="spot-h2" style="margin-top:18px;">Semaine (7 jours)</h2>
+          <div class="muted small">Bandeau scroll horizontal • clic = voir le détail en bas</div>
+          <div id="week-strip" class="week-strip"></div>
+        </div>
+      </div>
+
+      <div class="card mini-map">
+        <h2 class="spot-h2">Mini-map du spot</h2>
+        <div id="mini-map"></div>
+        <div class="muted small" style="margin-top:10px;">Localisation du spot.</div>
+
+        <div class="details-grid" style="margin-top:14px;">
+          <div class="details-item" style="grid-column:1 / -1;">
+            <h3>Résumé premium</h3>
+            <div class="txt" id="premium-summary">—</div>
+            <div class="muted small" id="k-updated" style="margin-top:10px;">Maj : —</div>
+          </div>
+
+          <div class="details-item">
+            <h3>Pourquoi c’est comme ça ?</h3>
+            <div class="txt" id="why-text">—</div>
+          </div>
+
+          <div class="details-item">
+            <h3>Météo</h3>
+            <div class="txt" id="meteo-text">Air : —<br>Eau : —</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="details-grid">
+      <div class="details-item">
+        <h3>Détails du jour</h3>
+        <div class="txt" id="day-details">Clique un jour dans “Semaine (7 jours)” pour voir les détails ici.</div>
+      </div>
+
+      <div class="details-item">
+        <h3>Chronologie (premium)</h3>
+        <div class="txt" id="timeline-box">—</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="refresh-modal" class="refresh-overlay hidden" role="dialog" aria-modal="true" aria-label="Rafraîchir">
+    <div class="refresh-box">
+      <div class="refresh-title">Rafraîchissement…</div>
+      <div id="refresh-count" class="refresh-count">5</div>
+      <div class="refresh-sub">On recharge les données dans <span id="refresh-sec">5</span>s</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="spot.js"></script>
+</body>
+</html>

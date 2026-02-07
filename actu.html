@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCEANLY — Actu surf</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="navbar navbar-fixed" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Prévisions surf • Carte • Favoris • Caméras • Actu</div>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="index.html#map">Carte</a>
+      <a href="index.html#favorites">Favoris</a>
+      <a href="camera.html">Caméra</a>
+      <a href="actu.html" class="active">Actu</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="cta-soft btn-small" href="index.html">← Retour</a>
+    </div>
+  </header>
+
+  <main class="actu-section" style="padding-top:110px">
+    <div class="section-head">
+      <h2 class="section-title">📰 Actu surf</h2>
+      <div class="section-sub">Mise à jour fréquente (RSS)</div>
+    </div>
+
+    <div class="actu-actions">
+      <button id="actu-prev" class="cta-soft btn-small" type="button">←</button>
+      <button id="actu-refresh" class="cta-soft btn-conditions btn-small" type="button">Rafraîchir</button>
+      <button id="actu-next" class="cta-soft btn-small" type="button">→</button>
+    </div>
+
+    <div id="actu-grid" class="actu-grid"></div>
+    <div class="muted" id="actu-status" style="margin-top:10px;">—</div>
+
+    <div id="refresh-overlay" class="refresh-overlay hidden">
+      <div class="refresh-box">
+        <div class="refresh-title">Mise à jour</div>
+        <div id="refresh-count" class="refresh-count">5</div>
+        <div class="refresh-sub">Actualisation des actus…</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="actu.js"></script>
+</body>
+</html>

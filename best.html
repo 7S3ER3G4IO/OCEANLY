@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCEANLY — Pourquoi ce spot est #1 ?</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- NAVBAR (identique partout) -->
+  <header class="navbar navbar-fixed" id="navbar">
+    <div class="logo">
+      <img src="assets/images/logo.svg" alt="Logo OCEANLY">
+      <div class="brand">
+        <div class="brand-name">OCEANLY</div>
+        <div class="brand-sub">Explication • Score • Détails</div>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="index.html#map">Carte</a>
+      <a href="index.html#favorites">Favoris</a>
+      <a href="index.html#ranking">Classement</a>
+      <a href="index.html#actu">Actu</a>
+      <a href="camera.html">Caméras</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="cta-soft btn-small btn-map" href="index.html#ranking">← Retour</a>
+    </div>
+  </header>
+
+  <main class="spot-page">
+
+    <section class="section-head">
+      <h1 class="section-title">🏅 Pourquoi ce spot est #1 ?</h1>
+      <div class="section-sub">
+        Cette page explique le classement en utilisant les mêmes signaux que l’algorithme OCEANLY.
+      </div>
+    </section>
+
+    <!-- SUMMARY CARD -->
+    <section class="spot-hero" style="margin-top:14px;">
+      <div class="spot-hero-left">
+        <h2 id="best-spot-name" class="spot-title" style="font-size:22px;margin:0;">Spot #1 : —</h2>
+        <div class="muted" id="best-spot-sub" style="margin-top:6px;">
+          Basé sur la houle (hauteur + période) + vent/rafales (pénalité) • MAJ via Open-Meteo.
+        </div>
+
+        <div class="spot-kpis" style="margin-top:14px;">
+          <div class="kpi">
+            <div class="kpi-label">Tag</div>
+            <div class="kpi-value" id="best-tag">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Score</div>
+            <div class="kpi-value" id="best-score">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Houle</div>
+            <div class="kpi-value" id="best-swell">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Vent</div>
+            <div class="kpi-value" id="best-wind">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spot-hero-right">
+        <a id="best-open-conditions" class="cta-soft btn-small btn-conditions" href="spot.html">Voir conditions</a>
+        <a id="best-open-camera" class="cta-soft btn-small btn-camera" href="https://viewsurf.com/" target="_blank" rel="noopener">ViewSurf</a>
+        <button id="best-open-map" class="cta-soft btn-small btn-map" type="button">Voir sur la carte</button>
+      </div>
+    </section>
+
+    <!-- EXPLANATION GRID -->
+    <section class="spot-grid" style="margin-top:14px;">
+      <div class="spot-card">
+        <div class="spot-card-title">1) Houle (qualité)</div>
+        <div class="spot-card-big" style="font-size:16px;">
+          Plus de période = plus d’énergie & meilleure tenue.
+        </div>
+        <div class="muted" style="margin-top:10px;font-size:13px;line-height:1.45;">
+          OCEANLY favorise une houle “surfeable” (ni trop petite, ni tempête),
+          et valorise la période (10–15s = très bon potentiel).
+        </div>
+      </div>
+
+      <div class="spot-card">
+        <div class="spot-card-title">2) Vent (pénalité)</div>
+        <div class="spot-card-big" style="font-size:16px;">
+          Moins de vent = plus clean.
+        </div>
+        <div class="muted" style="margin-top:10px;font-size:13px;line-height:1.45;">
+          Le vent et surtout les rafales dégradent la note.
+          Si vent fort / rafales très fortes → label “TEMPÊTE”.
+        </div>
+      </div>
+
+      <div class="spot-card">
+        <div class="spot-card-title">3) Score final + tags</div>
+        <div class="spot-card-big" style="font-size:16px;">
+          🟣 Tempête • 🟢 À pas rater • 🔵 Bien • 🟡 Moyen • 🔴 Pourri
+        </div>
+        <div class="muted" style="margin-top:10px;font-size:13px;line-height:1.45;">
+          Le score est une synthèse (0 → 10). Les seuils sont utilisés partout sur le site
+          (home + page spot) pour garder une lecture instantanée.
+        </div>
+      </div>
+    </section>
+
+    <!-- DETAILS -->
+    <section class="spot-days" style="margin-top:14px;">
+      <div class="spot-days-head">
+        <div class="spot-days-title">🔎 Détails transparents</div>
+        <div class="spot-days-sub muted">Ce que le site utilise (sans backend)</div>
+      </div>
+
+      <div class="detail-card" style="margin-top:12px;">
+        <div class="detail-title">Signaux pris en compte</div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <div class="detail-label">Houle (max jour)</div>
+            <div class="detail-value">wave_height_max</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Période (max jour)</div>
+            <div class="detail-value">wave_period_max</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Vent (max jour)</div>
+            <div class="detail-value">wind_speed_10m_max</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Rafales (max jour)</div>
+            <div class="detail-value">wind_gusts_10m_max</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Timezone</div>
+            <div class="detail-value">Europe/Paris</div>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:12px;font-size:13px;line-height:1.45;">
+          Limite actuelle : pas d’offshore/onshore (direction) car on reste en vanilla sans backend.
+          On pourra l’ajouter ensuite (API vent direction + orientation spot).
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden">—</div>
+
+  <script src="best.js"></script>
+</body>
+</html>
