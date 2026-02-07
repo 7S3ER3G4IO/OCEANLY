@@ -1,14 +1,5 @@
-/* =========================
-   OCEANLY — common.js (CLEAN + NETLIFY READY)
-   - Une seule navbar injectée sur toutes les pages
-   - Helpers: APP.apiGet (Netlify Functions ready)
-   - Active link auto + scroll style
-   ========================= */
-
 (() => {
-  // ---------- API (Netlify Functions) ----------
   const API_BASE = "/.netlify/functions";
-
   async function apiGet(functionName, params = {}) {
     const url = new URL(`${API_BASE}/${functionName}`, window.location.origin);
     Object.entries(params).forEach(([k, v]) => {
@@ -18,10 +9,8 @@
     if (!res.ok) throw new Error(`API error ${res.status}`);
     return res.json();
   }
-
   window.APP = { API_BASE, apiGet };
 
-  // ---------- Navbar (single source of truth) ----------
   function getPageKey() {
     const file = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     if (file === "" || file === "index.html") return "home";
@@ -66,19 +55,12 @@
       </div>
     `;
 
-    // active link
+    // active link simple
     const links = host.querySelectorAll(".nav-links a");
     links.forEach(a => a.classList.remove("active"));
-
-    if (page === "home") {
-      host.querySelector('.nav-links a[data-page="home"]')?.classList.add("active");
-    } else if (page === "camera") {
-      host.querySelector('.nav-links a[data-page="camera"]')?.classList.add("active");
-    } else if (page === "actu") {
-      host.querySelector('.nav-links a[data-page="actu"]')?.classList.add("active");
-    } else {
-      // pages spot/best => pas dans navbar, on laisse tout off
-    }
+    if (page === "home") host.querySelector('[data-page="home"]')?.classList.add("active");
+    if (page === "camera") host.querySelector('[data-page="camera"]')?.classList.add("active");
+    if (page === "actu") host.querySelector('[data-page="actu"]')?.classList.add("active");
   }
 
   function bindNavbarScroll() {
@@ -90,7 +72,6 @@
   }
 
   function ensureBodyOffset() {
-    // Evite que le contenu passe sous la navbar fixed
     document.body.style.paddingTop = "72px";
   }
 

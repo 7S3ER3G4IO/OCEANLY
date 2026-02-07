@@ -13,19 +13,20 @@
 </head>
 
 <body>
+  <!-- Navbar injectée -->
   <header id="navbar"></header>
 
-  <!-- HERO (nouvelle DA) -->
+  <!-- HERO -->
   <section class="hero hero-dark hero-center">
     <div class="hero-inner">
-      <div class="hero-live-badge">
+      <div class="hero-live-badge" id="hero-live">
         <span class="live-dot"></span>
         <span class="live-text">LIVE</span>
       </div>
 
       <h1 class="hero-title-premium">
         Prévisions surf <span class="hero-glow">ultra lisibles</span><br>
-        <span class="hero-grad">ultra visuelles</span>.
+        <span class="hero-grad">ultra visuelles.</span>
       </h1>
 
       <p class="hero-copy hero-copy-center">
@@ -43,28 +44,30 @@
 
   <!-- MAP + SWIPE -->
   <section class="hero-map-wrap" id="map">
-    <div class="map-header">
-      <h2 class="map-title">Carte + spots</h2>
-      <p class="map-subtitle">Swipe la liste → clique un spot → popup premium.</p>
-    </div>
-
-    <div class="map-layout map-layout-focus">
-      <div class="map-container premium-map">
-        <div class="map-hint">
-          <div class="hint-pill">👆 Swipe la liste à droite</div>
-          <div class="hint-sub">Puis clique un spot pour le focus</div>
-        </div>
-
-        <div id="surf-map"></div>
+    <div class="map-shell">
+      <div class="map-header">
+        <h2 class="map-title">Carte + spots</h2>
+        <p class="map-subtitle">Swipe la liste → clique un spot → popup premium.</p>
       </div>
 
-      <aside class="side-panel">
-        <div class="panel-card">
-          <div class="panel-title panel-title-alt">Swipe spots</div>
-          <div class="panel-help">Scroll/Swipe vertical • clic = focus carte</div>
-          <div id="spot-list" class="spot-list spot-list-scroll swipe-strong"></div>
+      <div class="map-layout map-layout-focus">
+        <div class="map-container premium-map">
+          <div class="map-hint">
+            <div class="hint-pill">👆 Swipe la liste à droite</div>
+            <div class="hint-sub">Puis clique un spot pour le focus</div>
+          </div>
+
+          <div id="surf-map"></div>
         </div>
-      </aside>
+
+        <aside class="side-panel">
+          <div class="panel-card">
+            <div class="panel-title panel-title-alt">Swipe spots</div>
+            <div class="panel-help">Scroll/Swipe vertical • clic = focus carte</div>
+            <div id="spot-list" class="spot-list spot-list-scroll swipe-strong"></div>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 
@@ -105,7 +108,7 @@
     <div id="news-notif-sub" class="news-notif-sub">Clique pour voir</div>
   </button>
 
-  <!-- LOGIN MODAL (maintenant réel via Functions) -->
+  <!-- LOGIN MODAL -->
   <div id="login-modal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -147,7 +150,7 @@
   <div id="refresh-overlay" class="refresh-overlay hidden" aria-live="polite">
     <div class="refresh-box">
       <div class="refresh-title">Mise à jour</div>
-      <div id="refresh-count" class="refresh-count">5</div>
+      <div id="refresh-count" class="refresh-count">3</div>
       <div class="refresh-sub">Actualisation des données…</div>
     </div>
   </div>

@@ -1,29 +1,27 @@
-/* =========================================================
-   OCEANLY — HOME script (Ticket UI/UX + Actus Live + Favoris Netlify)
-   - Scroll "Voir conditions" => map avec offset navbar
-   - Map layout premium + zoom UI redesign (CSS)
-   - Swipe spots (liste) = navigation principale (pas de search)
-   - Favoris = backend Netlify (token + functions)
-   - Actus = Netlify Function news + auto-refresh
-   ========================================================= */
-
 const SPOTS = window.OCEANLY?.SPOTS || [];
-
 const $ = (sel) => document.querySelector(sel);
 
+let map;                 // <-- IMPORTANT (global)
+let markers = new Map();
+let activeSpotSlug = null;
+
+const LS_TOKEN = "oceanly:auth_token";
+const LS_EMAIL = "oceanly:auth_email";
+
+function getToken() { return localStorage.getItem(LS_TOKEN) || ""; }
+function setToken(t) { localStorage.setItem(LS_TOKEN, t); }
+function setEmail(e) { localStorage.setItem(LS_EMAIL, e); }
+function getEmail() { return localStorage.getItem(LS_EMAIL) || ""; }
+function isAuthed() { return !!getToken(); }
+
 const el = {
-  navbar: $("#navbar"),
   goMap: $("#go-map"),
-  map: $("#surf-map"),
+  liveBadge: $("#hero-live"),
+  mapEl: $("#surf-map"),
   list: $("#spot-list"),
 
   favEmpty: $("#favorites-empty"),
   favList: $("#favorites-list"),
-
-  toast: $("#toast"),
-
-  refreshOverlay: $("#refresh-overlay"),
-  refreshCount: $("#refresh-count"),
 
   actuGrid: $("#actu-grid"),
   actuStatus: $("#actu-status"),
@@ -34,7 +32,6 @@ const el = {
   newsNotif: $("#news-notif"),
   newsNotifSub: $("#news-notif-sub"),
 
-  loginOpen: null, // injecté par navbar
   loginModal: $("#login-modal"),
   loginClose: $("#login-close"),
   tabLogin: $("#tab-login"),
@@ -46,6 +43,11 @@ const el = {
   loginSave: $("#login-save"),
   loginState: $("#login-state"),
   loginHint: $("#login-hint"),
+
+  refreshOverlay: $("#refresh-overlay"),
+  refreshCount: $("#refresh-count"),
+
+  toast: $("#toast"),
 };
 
 function toast(msg) {
@@ -57,18 +59,23 @@ function toast(msg) {
 }
 
 /* -----------------------------
-   Auth token storage (client)
-   - OK de stocker le token côté client (session),
-     mais les FAVORIS eux sont côté serveur (multi-device via login)
+   Scroll to map (100% reliable)
 ------------------------------ */
-const LS_TOKEN = "oceanly:auth_token";
-const LS_EMAIL = "oceanly:auth_email";
+function scrollToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
 
-function getToken() { return localStorage.getItem(LS_TOKEN) || ""; }
-function setToken(t) { localStorage.setItem(LS_TOKEN, t); }
-function setEmail(e) { localStorage.setItem(LS_EMAIL, e); }
-function getEmail() { return localStorage.getItem(LS_EMAIL) || ""; }
-function isAuthed() { return !!getToken(); }
+  const nav = document.getElementById("navbar");
+  const navH = nav ? nav.getBoundingClientRect().height : 72;
+
+  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 16;
+  window.scrollTo({ top, behavior: "smooth" });
+
+  // Leaflet resize after scroll
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 700);
+}
 
 /* -----------------------------
    Favorites (server)
@@ -94,6 +101,7 @@ async function toggleFav(slug) {
     openLogin();
     return;
   }
+
   const r = await fetch("/.netlify/functions/favorites", {
     method: "POST",
     headers: {
@@ -110,9 +118,6 @@ async function toggleFav(slug) {
   toast(j.on ? "Ajouté aux favoris" : "Retiré des favoris");
 }
 
-/* -----------------------------
-   Render favorites UI
------------------------------- */
 function renderFavs() {
   if (!el.favEmpty || !el.favList) return;
 
@@ -120,11 +125,9 @@ function renderFavs() {
   const has = serverFavs.length > 0;
 
   el.favEmpty.classList.toggle("hidden", has);
-  if (!has) {
-    el.favEmpty.textContent = isAuthed()
-      ? "Aucun favori. Ajoute-en depuis la carte."
-      : "Connecte-toi pour retrouver tes favoris partout.";
-  }
+  el.favEmpty.textContent = isAuthed()
+    ? "Aucun favori. Ajoute-en depuis la carte."
+    : "Connecte-toi pour retrouver tes favoris partout.";
 
   serverFavs.forEach(slug => {
     const s = SPOTS.find(x => x.slug === slug);
@@ -135,7 +138,7 @@ function renderFavs() {
     card.innerHTML = `
       <div>
         <div class="fav-title">${s.name}</div>
-        <div class="fav-sub">${s.region} • ${s.lat.toFixed(3)}, ${s.lon.toFixed(3)}</div>
+        <div class="fav-sub">${s.region}</div>
       </div>
       <div class="fav-actions">
         <a class="cta-soft btn-small btn-conditions" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
@@ -149,122 +152,32 @@ function renderFavs() {
 }
 
 /* -----------------------------
-   Smooth scroll map (offset)
+   Leaflet map
 ------------------------------ */
-function scrollToMap() {
-  const target = document.getElementById("map");
-  if (!target) return;
-
-  const nav = document.getElementById("navbar");
-  const navH = nav ? nav.getBoundingClientRect().height : 72;
-
-  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 18;
-  window.scrollTo({ top, behavior: "smooth" });
-}
-
-if (el.goMap) el.goMap.addEventListener("click", scrollToMap);
-
-/* -----------------------------
-   Map (Leaflet)
------------------------------- */
-let map;
-let markers = new Map();
-let activeSpotSlug = null;
-
 function bluePinIcon() {
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
     <path fill="rgba(56,189,248,0.95)" d="M12 2c-3.86 0-7 3.14-7 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
   </svg>`;
-  return L.divIcon({
-    className: "",
-    html: `<div class="pin-glow">${svg}</div>`,
-    iconSize: [34,34],
-    iconAnchor: [17,34],
-    popupAnchor: [0,-30],
-  });
+  return L.divIcon({ className: "", html: `<div class="pin-glow">${svg}</div>`, iconSize:[34,34], iconAnchor:[17,34], popupAnchor:[0,-30] });
 }
 function redPinIcon() {
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
     <path fill="rgba(239,68,68,0.95)" d="M12 2c-3.86 0-7 3.14-7 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
   </svg>`;
-  return L.divIcon({
-    className: "",
-    html: `<div class="pin-glow red">${svg}</div>`,
-    iconSize: [34,34],
-    iconAnchor: [17,34],
-    popupAnchor: [0,-30],
-  });
-}
-
-function initMap() {
-  if (!el.map) return;
-
-  map = L.map("surf-map", {
-    zoomControl: false,
-    attributionControl: true,
-  });
-
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
-  }).addTo(map);
-
-  const franceBounds = L.latLngBounds(
-    L.latLng(42.0, -5.8),
-    L.latLng(51.5, 8.5)
-  );
-  map.fitBounds(franceBounds, { padding:[24,24] });
-
-  const btn = document.getElementById("go-map");
-if (btn) {
-  btn.addEventListener("pointerdown", (e) => {
-    const r = btn.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-
-    const ripple = document.createElement("span");
-    ripple.className = "ripple";
-    ripple.style.left = `${x}px`;
-    ripple.style.top = `${y}px`;
-    btn.appendChild(ripple);
-
-    setTimeout(() => ripple.remove(), 600);
-  });
-}
-
-
-  // Zoom UI (design via CSS)
-  const zoomUI = document.createElement("div");
-  zoomUI.className = "zoom-ui-premium";
-  zoomUI.innerHTML = `
-    <button class="zoom-btn-premium" id="zplus" type="button" aria-label="Zoom +">+</button>
-    <button class="zoom-btn-premium" id="zminus" type="button" aria-label="Zoom -">−</button>
-  `;
-  el.map.parentElement.appendChild(zoomUI);
-  zoomUI.querySelector("#zplus").addEventListener("click", () => map.zoomIn());
-  zoomUI.querySelector("#zminus").addEventListener("click", () => map.zoomOut());
-
-  SPOTS.forEach(s => {
-    const m = L.marker([s.lat, s.lon], { icon: bluePinIcon() }).addTo(map);
-    markers.set(s.slug, m);
-    m.on("click", () => openSpotPopup(s.slug, true));
-  });
+  return L.divIcon({ className: "", html: `<div class="pin-glow red">${svg}</div>`, iconSize:[34,34], iconAnchor:[17,34], popupAnchor:[0,-30] });
 }
 
 function setActivePin(slug) {
-  markers.forEach((m, sslug) => {
-    m.setIcon(sslug === slug ? redPinIcon() : bluePinIcon());
-  });
+  markers.forEach((m, sslug) => m.setIcon(sslug === slug ? redPinIcon() : bluePinIcon()));
   activeSpotSlug = slug;
 }
 
 function openSpotPopup(slug, panTo = false) {
   const s = SPOTS.find(x => x.slug === slug);
-  if (!s) return;
   const m = markers.get(slug);
-  if (!m) return;
+  if (!s || !m) return;
 
   setActivePin(slug);
   if (panTo) map.setView([s.lat, s.lon], Math.max(map.getZoom(), 9), { animate:true });
@@ -293,16 +206,46 @@ function openSpotPopup(slug, panTo = false) {
 
   setTimeout(() => {
     const btn = document.querySelector(`button[data-fav="${CSS.escape(s.slug)}"]`);
-    if (!btn) return;
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      toggleFav(s.slug);
-    });
+    if (btn) btn.addEventListener("click", (e) => { e.preventDefault(); toggleFav(s.slug); });
   }, 0);
 }
 
+function initMap() {
+  if (!el.mapEl || typeof L === "undefined") return;
+
+  map = L.map("surf-map", { zoomControl:false, attributionControl:true });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  }).addTo(map);
+
+  const franceBounds = L.latLngBounds(L.latLng(42.0, -5.8), L.latLng(51.5, 8.5));
+  map.fitBounds(franceBounds, { padding:[24,24] });
+
+  // Zoom UI premium
+  const zoomUI = document.createElement("div");
+  zoomUI.className = "zoom-ui-premium";
+  zoomUI.innerHTML = `
+    <button class="zoom-btn-premium" id="zplus" type="button" aria-label="Zoom +">+</button>
+    <button class="zoom-btn-premium" id="zminus" type="button" aria-label="Zoom -">−</button>
+  `;
+  el.mapEl.parentElement.appendChild(zoomUI);
+  zoomUI.querySelector("#zplus").addEventListener("click", () => map.zoomIn());
+  zoomUI.querySelector("#zminus").addEventListener("click", () => map.zoomOut());
+
+  SPOTS.forEach(s => {
+    const mk = L.marker([s.lat, s.lon], { icon: bluePinIcon() }).addTo(map);
+    markers.set(s.slug, mk);
+    mk.on("click", () => openSpotPopup(s.slug, true));
+  });
+
+  // IMPORTANT: recalcul taille après layout
+  setTimeout(() => map.invalidateSize(), 250);
+}
+
 /* -----------------------------
-   Swipe Spots list (principal)
+   Spots list (swipe)
 ------------------------------ */
 function renderSpotList() {
   if (!el.list) return;
@@ -315,9 +258,7 @@ function renderSpotList() {
     row.innerHTML = `
       <div class="spot-row2-top">
         <div class="spot-row2-name">${s.name}</div>
-        <div class="spot-row2-right">
-          <span class="spot-status ok">LIVE</span>
-        </div>
+        <div class="spot-row2-right"><span class="spot-status ok">LIVE</span></div>
       </div>
       <div class="spot-row2-sub">${s.region}</div>
     `;
@@ -327,7 +268,7 @@ function renderSpotList() {
 }
 
 /* -----------------------------
-   Actu LIVE (Netlify Function)
+   Actu LIVE (function)
 ------------------------------ */
 let actuItems = [];
 let actuIndex = 0;
@@ -342,7 +283,6 @@ function formatDate(d) {
 
 function renderActu3() {
   if (!el.actuGrid) return;
-
   const view = actuItems.slice(actuIndex, actuIndex + 3);
   el.actuGrid.innerHTML = "";
 
@@ -407,13 +347,8 @@ function runRefreshCountdown(onDone) {
   }, 1000);
 }
 
-if (el.actuPrev) el.actuPrev.addEventListener("click", () => { actuIndex = Math.max(0, actuIndex - 3); renderActu3(); });
-if (el.actuNext) el.actuNext.addEventListener("click", () => { actuIndex = Math.min(Math.max(0, actuItems.length - 3), actuIndex + 3); renderActu3(); });
-if (el.actuRefresh) el.actuRefresh.addEventListener("click", () => runRefreshCountdown(() => loadActu(false)));
-if (el.newsNotif) el.newsNotif.addEventListener("click", () => { el.newsNotif.classList.add("hidden"); window.location.href = "actu.html"; });
-
 /* -----------------------------
-   Login modal -> backend
+   Login modal (auth function)
 ------------------------------ */
 function openLogin() {
   el.loginModal?.classList.remove("hidden");
@@ -421,33 +356,28 @@ function openLogin() {
 }
 function closeLogin() { el.loginModal?.classList.add("hidden"); }
 
-function bindLoginButtonsFromNavbar() {
-  // navbar est injectée par common.js, donc le bouton arrive après DOMContentLoaded
+function bindLoginButtonFromNavbar() {
   const btn = document.getElementById("login-open");
-  if (btn) {
-    btn.addEventListener("click", openLogin);
-  }
+  if (btn) btn.addEventListener("click", openLogin);
 }
 
-if (el.loginClose) el.loginClose.addEventListener("click", closeLogin);
+el.loginClose?.addEventListener("click", closeLogin);
 el.loginModal?.addEventListener("click", (e) => { if (e.target === el.loginModal) closeLogin(); });
 
-if (el.tabLogin && el.tabSignup) {
-  el.tabLogin.addEventListener("click", () => {
-    el.tabLogin.classList.add("active");
-    el.tabSignup.classList.remove("active");
-    el.signupExtra.classList.add("hidden");
-    el.loginHint.textContent = "Connexion → favoris multi-device";
-  });
-  el.tabSignup.addEventListener("click", () => {
-    el.tabSignup.classList.add("active");
-    el.tabLogin.classList.remove("active");
-    el.signupExtra.classList.remove("hidden");
-    el.loginHint.textContent = "Inscription → crée ton compte";
-  });
-}
+el.tabLogin?.addEventListener("click", () => {
+  el.tabLogin.classList.add("active");
+  el.tabSignup.classList.remove("active");
+  el.signupExtra.classList.add("hidden");
+  el.loginHint.textContent = "Connexion → favoris multi-device";
+});
+el.tabSignup?.addEventListener("click", () => {
+  el.tabSignup.classList.add("active");
+  el.tabLogin.classList.remove("active");
+  el.signupExtra.classList.remove("hidden");
+  el.loginHint.textContent = "Inscription → crée ton compte";
+});
 
-if (el.loginSave) el.loginSave.addEventListener("click", async () => {
+el.loginSave?.addEventListener("click", async () => {
   const email = (el.loginEmail.value || "").trim().toLowerCase();
   const pass = (el.loginPass.value || "").trim();
   const isSignup = !el.signupExtra.classList.contains("hidden");
@@ -473,7 +403,7 @@ if (el.loginSave) el.loginSave.addEventListener("click", async () => {
     toast(isSignup ? "Compte créé ✅" : "Connecté ✅");
 
     await favsFetch();
-    setTimeout(closeLogin, 500);
+    setTimeout(closeLogin, 450);
   } catch {
     toast("Erreur réseau (auth)");
   }
@@ -483,48 +413,37 @@ if (el.loginSave) el.loginSave.addEventListener("click", async () => {
    Init
 ------------------------------ */
 document.addEventListener("DOMContentLoaded", async () => {
-  function scrollToSection(id) {
-  const target = document.getElementById(id);
-  if (!target) return;
+  // Bouton + badge LIVE -> map
+  if (el.goMap) el.goMap.addEventListener("click", () => scrollToSection("map"));
+  if (el.liveBadge) el.liveBadge.addEventListener("click", () => scrollToSection("map"));
 
-  const nav = document.getElementById("navbar");
-  const navH = nav ? nav.getBoundingClientRect().height : 72;
+  // Ripple sur le bouton (premium)
+  if (el.goMap) {
+    el.goMap.addEventListener("pointerdown", (e) => {
+      const r = el.goMap.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      const ripple = document.createElement("span");
+      ripple.className = "ripple";
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      el.goMap.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
 
-  const top = target.getBoundingClientRect().top + window.pageYOffset - navH - 16;
-  window.scrollTo({ top, behavior: "smooth" });
+  bindLoginButtonFromNavbar();
 
-  // si Leaflet existe (map), force recalcul taille après scroll
-  setTimeout(() => {
-    if (typeof map !== "undefined" && map) map.invalidateSize();
-  }, 650);
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Bouton Voir conditions -> scroll map
-  const go = document.getElementById("go-map");
-  if (go) go.addEventListener("click", () => scrollToSection("map"));
-
-  // Badge LIVE interactif -> scroll map aussi (UX premium)
-  const live = document.querySelector(".hero-live-badge");
-  if (live) live.addEventListener("click", () => scrollToSection("map"));
-});
-
-  bindLoginButtonsFromNavbar();
   initMap();
   renderSpotList();
 
-  // Favoris: charge depuis serveur si connecté
   try { await favsFetch(); } catch {}
 
-  // Actus: charge + auto-refresh toutes les 5 minutes
+  if (el.actuPrev) el.actuPrev.addEventListener("click", () => { actuIndex = Math.max(0, actuIndex - 3); renderActu3(); });
+  if (el.actuNext) el.actuNext.addEventListener("click", () => { actuIndex = Math.min(Math.max(0, actuItems.length - 3), actuIndex + 3); renderActu3(); });
+  if (el.actuRefresh) el.actuRefresh.addEventListener("click", () => runRefreshCountdown(() => loadActu(false)));
+  if (el.newsNotif) el.newsNotif.addEventListener("click", () => { el.newsNotif.classList.add("hidden"); window.location.href = "actu.html"; });
+
   await loadActu(true);
   setInterval(() => loadActu(false), 5 * 60 * 1000);
-
-  // Fix pour éviter flash scroll
-  let scrollTimer = null;
-  window.addEventListener("scroll", () => {
-    document.body.classList.add("is-scrolling");
-    clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 120);
-  }, { passive:true });
 });
