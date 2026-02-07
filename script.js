@@ -1,36 +1,17 @@
 /* =========================================================
-   OCEANLY — HOME script
-   - Map France cadrée (pas trop zoom)
-   - Pins bleus, popup premium, favori toggle (on/off)
-   - Bouton hero => scroll map
-   - Search + clear
-   - Favoris section
-   - Actu (3 visibles) via RSS proxy (jina.ai)
-   - Refresh modal 5s uniquement quand bouton refresh
-   - Fix scroll white flashes: body.is-scrolling
+   OCEANLY — HOME script (NETLIFY READY + SPOTS UNIFIÉS)
+   - Utilise window.OCEANLY.SPOTS (data.js) => slug unique partout
+   - Favoris = oceanly:favorites (unique)
+   - Map + popup + search + actu RSS proxy (jina.ai)
    ========================================================= */
 
 const LS_FAV = "oceanly:favorites";
 const LS_LOGIN = "oceanly:login";
 
 /* -----------------------------
-   Spots (coords + camera link)
+   Spots (SOURCE UNIQUE)
 ------------------------------ */
-const SPOTS = [
-  { id:"lacanau-ocean", name:"Lacanau Océan", region:"Gironde", lat:44.994, lon:-1.210, viewsurf:"https://viewsurf.com/" },
-  { id:"le-porge-ocean", name:"Le Porge (Océan)", region:"Gironde", lat:44.889, lon:-1.253, viewsurf:"https://viewsurf.com/" },
-  { id:"carcans-plage", name:"Carcans Plage", region:"Gironde", lat:45.080, lon:-1.220, viewsurf:"https://viewsurf.com/" },
-  { id:"biscarrosse", name:"Biscarrosse Plage", region:"Landes", lat:44.441, lon:-1.252, viewsurf:"https://viewsurf.com/" },
-  { id:"mimizan", name:"Mimizan Plage", region:"Landes", lat:44.213, lon:-1.295, viewsurf:"https://viewsurf.com/" },
-  { id:"seignosse-estagnots", name:"Seignosse (Les Estagnots)", region:"Landes", lat:43.703, lon:-1.448, viewsurf:"https://viewsurf.com/" },
-  { id:"hossegor-graviere", name:"Hossegor (La Gravière)", region:"Landes", lat:43.674, lon:-1.444, viewsurf:"https://viewsurf.com/" },
-  { id:"capbreton-santocha", name:"Capbreton (La Piste)", region:"Landes", lat:43.648, lon:-1.433, viewsurf:"https://viewsurf.com/" },
-  { id:"anglet-cavaliers", name:"Anglet (Les Cavaliers)", region:"Pays Basque", lat:43.514, lon:-1.542, viewsurf:"https://viewsurf.com/" },
-  { id:"biarritz", name:"Biarritz (Côte des Basques)", region:"Pays Basque", lat:43.478, lon:-1.571, viewsurf:"https://viewsurf.com/" },
-  { id:"la-torche", name:"La Torche", region:"Bretagne", lat:47.837, lon:-4.359, viewsurf:"https://viewsurf.com/" },
-  { id:"penhors", name:"Penhors", region:"Bretagne", lat:47.930, lon:-4.392, viewsurf:"https://viewsurf.com/" },
-  { id:"crozon-palue", name:"Crozon (La Palue)", region:"Bretagne", lat:48.195, lon:-4.546, viewsurf:"https://viewsurf.com/" }
-];
+const SPOTS = (window.OCEANLY && window.OCEANLY.SPOTS) ? window.OCEANLY.SPOTS : [];
 
 /* -----------------------------
    Helpers
@@ -83,13 +64,11 @@ window.addEventListener("scroll", () => {
   el.navbar.classList.toggle("scrolled", window.scrollY > 10);
 });
 
-/* Active nav (home anchors) */
+/* Active nav (home) */
 (function setActiveNav() {
   const path = location.pathname.split("/").pop() || "index.html";
   const links = document.querySelectorAll(".nav-links a");
   links.forEach(a => a.classList.remove("active"));
-
-  // home
   if (path === "index.html") {
     document.querySelectorAll('.nav-links a[href="index.html"]').forEach(a=>a.classList.add("active"));
   }
@@ -117,7 +96,7 @@ function toast(msg) {
 }
 
 /* -----------------------------
-   Favorites storage
+   Favorites storage (UNIQUE)
 ------------------------------ */
 function getFavs() {
   try { return JSON.parse(localStorage.getItem(LS_FAV) || "[]"); }
@@ -126,14 +105,14 @@ function getFavs() {
 function setFavs(arr) {
   localStorage.setItem(LS_FAV, JSON.stringify(arr));
 }
-function isFav(id) {
-  return getFavs().includes(id);
+function isFav(slug) {
+  return getFavs().includes(slug);
 }
-function toggleFav(id) {
+function toggleFav(slug) {
   const favs = getFavs();
-  const idx = favs.indexOf(id);
+  const idx = favs.indexOf(slug);
   if (idx >= 0) favs.splice(idx, 1);
-  else favs.push(id);
+  else favs.push(slug);
   setFavs(favs);
   renderFavs();
 }
@@ -148,8 +127,8 @@ function renderFavs() {
   el.favList.innerHTML = "";
   el.favEmpty.classList.toggle("hidden", favs.length > 0);
 
-  favs.forEach(id => {
-    const s = SPOTS.find(x => x.id === id);
+  favs.forEach(slug => {
+    const s = SPOTS.find(x => x.slug === slug);
     if (!s) return;
 
     const card = document.createElement("div");
@@ -160,13 +139,13 @@ function renderFavs() {
         <div class="fav-sub">${s.region} • ${s.lat.toFixed(3)}, ${s.lon.toFixed(3)}</div>
       </div>
       <div class="fav-actions">
-        <a class="cta-soft btn-small btn-conditions" href="spot.html?spot=${encodeURIComponent(s.id)}">Conditions</a>
-        <a class="cta-soft btn-small btn-camera" href="camera.html?spot=${encodeURIComponent(s.id)}">Caméra</a>
-        <button class="cta-soft btn-small" data-remove="${s.id}" type="button">Retirer</button>
+        <a class="cta-soft btn-small btn-conditions" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
+        <a class="cta-soft btn-small btn-camera" href="camera.html?spot=${encodeURIComponent(s.slug)}">Caméra</a>
+        <button class="cta-soft btn-small" data-remove="${s.slug}" type="button">Retirer</button>
       </div>
     `;
     card.querySelector('[data-remove]').addEventListener("click", () => {
-      toggleFav(s.id);
+      toggleFav(s.slug);
       toast("Favori retiré");
     });
 
@@ -179,10 +158,9 @@ function renderFavs() {
 ------------------------------ */
 let map;
 let markers = new Map();
-let activeSpotId = null;
+let activeSpotSlug = null;
 
 function bluePinIcon() {
-  // SVG pin bleu
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
     <path fill="rgba(56,189,248,0.95)" d="M12 2c-3.86 0-7 3.14-7 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
@@ -213,24 +191,21 @@ function initMap() {
   if (!el.map) return;
 
   map = L.map("surf-map", {
-    zoomControl: false, // on enlève le +/-
+    zoomControl: false,
     attributionControl: true,
   });
 
-  // dark tiles
   L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap &copy; CARTO'
   }).addTo(map);
 
-  // Vue “France entière” (pas zoom excessif)
   const franceBounds = L.latLngBounds(
     L.latLng(42.0, -5.8),
     L.latLng(51.5, 8.5)
   );
   map.fitBounds(franceBounds, { padding:[20,20] });
 
-  // Custom zoom UI
   const zoomUI = document.createElement("div");
   zoomUI.className = "zoom-ui";
   zoomUI.innerHTML = `
@@ -241,33 +216,30 @@ function initMap() {
   zoomUI.querySelector("#zplus").addEventListener("click", () => map.zoomIn());
   zoomUI.querySelector("#zminus").addEventListener("click", () => map.zoomOut());
 
-  // markers
   SPOTS.forEach(s => {
     const m = L.marker([s.lat, s.lon], { icon: bluePinIcon() }).addTo(map);
-    markers.set(s.id, m);
-
-    m.on("click", () => openSpotPopup(s.id, true));
+    markers.set(s.slug, m);
+    m.on("click", () => openSpotPopup(s.slug, true));
   });
 }
 
-function setActivePin(id) {
-  // reset all to blue
-  markers.forEach((m, sid) => {
-    m.setIcon(sid === id ? redPinIcon() : bluePinIcon());
+function setActivePin(slug) {
+  markers.forEach((m, sslug) => {
+    m.setIcon(sslug === slug ? redPinIcon() : bluePinIcon());
   });
-  activeSpotId = id;
+  activeSpotSlug = slug;
 }
 
-function openSpotPopup(id, panTo = false) {
-  const s = SPOTS.find(x => x.id === id);
+function openSpotPopup(slug, panTo = false) {
+  const s = SPOTS.find(x => x.slug === slug);
   if (!s) return;
-  const m = markers.get(id);
+  const m = markers.get(slug);
   if (!m) return;
 
-  setActivePin(id);
+  setActivePin(slug);
   if (panTo) map.setView([s.lat, s.lon], Math.max(map.getZoom(), 9), { animate:true });
 
-  const favOn = isFav(id);
+  const favOn = isFav(slug);
   const favClass = favOn ? "on" : "";
   const favText = favOn ? "Favori ✅" : "Favori";
 
@@ -281,9 +253,9 @@ function openSpotPopup(id, panTo = false) {
       </div>
 
       <div class="popup-actions">
-        <a class="popup-btn popup-btn-blue" href="spot.html?spot=${encodeURIComponent(s.id)}">Conditions</a>
-        <a class="popup-btn popup-btn-red" href="camera.html?spot=${encodeURIComponent(s.id)}">Caméra</a>
-        <button class="popup-btn popup-btn-fav ${favClass}" data-fav="${s.id}" type="button">${favText}</button>
+        <a class="popup-btn popup-btn-blue" href="spot.html?spot=${encodeURIComponent(s.slug)}">Conditions</a>
+        <a class="popup-btn popup-btn-red" href="camera.html?spot=${encodeURIComponent(s.slug)}">Caméra</a>
+        <button class="popup-btn popup-btn-fav ${favClass}" data-fav="${s.slug}" type="button">${favText}</button>
       </div>
 
       <div class="popup-hint">Pins bleus = spots • sélection = pin rouge.</div>
@@ -292,14 +264,13 @@ function openSpotPopup(id, panTo = false) {
 
   m.bindPopup(html, { closeButton:true, autoPan:true, className:"" }).openPopup();
 
-  // bind fav toggle
   setTimeout(() => {
-    const btn = document.querySelector(`button[data-fav="${CSS.escape(s.id)}"]`);
+    const btn = document.querySelector(`button[data-fav="${CSS.escape(s.slug)}"]`);
     if (!btn) return;
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      toggleFav(s.id);
-      const on = isFav(s.id);
+      toggleFav(s.slug);
+      const on = isFav(s.slug);
       btn.classList.toggle("on", on);
       btn.textContent = on ? "Favori ✅" : "Favori";
       toast(on ? "Ajouté aux favoris" : "Retiré des favoris");
@@ -311,11 +282,11 @@ function openSpotPopup(id, panTo = false) {
    Search + select + list
 ------------------------------ */
 function renderSpotUI() {
-  // select
   if (el.select) {
+    el.select.innerHTML = `<option value="">Choisir un spot…</option>`;
     SPOTS.forEach(s => {
       const opt = document.createElement("option");
-      opt.value = s.id;
+      opt.value = s.slug;
       opt.textContent = `${s.name} — ${s.region}`;
       el.select.appendChild(opt);
     });
@@ -327,7 +298,6 @@ function renderSpotUI() {
     });
   }
 
-  // list
   if (el.list) {
     el.list.innerHTML = "";
     SPOTS.forEach(s => {
@@ -344,42 +314,44 @@ function renderSpotUI() {
         <div class="spot-row2-sub">${s.region}</div>
       `;
       row.addEventListener("click", () => {
-        openSpotPopup(s.id, true);
+        openSpotPopup(s.slug, true);
         scrollToMap();
       });
       el.list.appendChild(row);
     });
   }
 
-  // search
   if (el.search) {
     const updateClear = () => {
       const v = (el.search.value || "").trim();
       el.clear.classList.toggle("hidden", v.length === 0);
     };
+
     el.search.addEventListener("input", () => {
       updateClear();
       const q = (el.search.value || "").trim().toLowerCase();
       if (!q) return;
 
       const found = SPOTS.find(s =>
-        s.name.toLowerCase().includes(q) || s.id.includes(q) || s.region.toLowerCase().includes(q)
+        s.name.toLowerCase().includes(q) ||
+        s.slug.includes(q) ||
+        s.region.toLowerCase().includes(q)
       );
-      if (found) {
-        openSpotPopup(found.id, true);
-      }
+      if (found) openSpotPopup(found.slug, true);
     });
+
     el.clear.addEventListener("click", () => {
       el.search.value = "";
       updateClear();
       toast("Recherche effacée");
-      // reset France view
+
       const franceBounds = L.latLngBounds(L.latLng(42.0, -5.8), L.latLng(51.5, 8.5));
       map.fitBounds(franceBounds, { padding:[20,20] });
-      // reset pins
+
       markers.forEach(m => m.setIcon(bluePinIcon()));
-      activeSpotId = null;
+      activeSpotSlug = null;
     });
+
     updateClear();
   }
 }
@@ -398,6 +370,7 @@ if (el.goMap) el.goMap.addEventListener("click", scrollToMap);
    Refresh modal 5s (ONLY on buttons)
 ------------------------------ */
 async function runRefreshCountdown(onDone) {
+  if (!el.refreshOverlay || !el.refreshCount) return;
   el.refreshOverlay.classList.remove("hidden");
   let n = 5;
   el.refreshCount.textContent = String(n);
@@ -416,7 +389,6 @@ async function runRefreshCountdown(onDone) {
    Actu (RSS via jina.ai proxy)
 ------------------------------ */
 const ACTU_SOURCES = [
-  // tu peux en ajouter d’autres
   "https://www.surf-report.com/rss",
   "https://www.surfer.com/feed/"
 ];
@@ -424,9 +396,7 @@ const ACTU_SOURCES = [
 let actuItems = [];
 let actuIndex = 0;
 
-function stripHtml(s) {
-  return (s || "").replace(/<[^>]*>/g, "").trim();
-}
+function stripHtml(s) { return (s || "").replace(/<[^>]*>/g, "").trim(); }
 
 function formatDate(d) {
   try {
@@ -437,16 +407,13 @@ function formatDate(d) {
 }
 
 async function fetchRss(url) {
-  // proxy texte HTML du RSS
-  const prox = "https://r.jina.ai/http://"+url.replace(/^https?:\/\//,"");
+  const prox = "https://r.jina.ai/http://" + url.replace(/^https?:\/\//,"");
   const res = await fetch(prox, { cache:"no-store" });
   if (!res.ok) throw new Error("fetch failed");
-  const txt = await res.text();
-  return txt;
+  return res.text();
 }
 
 function parseRss(xmlText) {
-  // jina retourne une page texte, mais le RSS est dedans => on tente parse xml
   const raw = xmlText;
   const start = raw.indexOf("<?xml");
   const xml = start >= 0 ? raw.slice(start) : raw;
@@ -460,11 +427,8 @@ function parseRss(xmlText) {
     const pubDate = it.querySelector("pubDate")?.textContent?.trim() || "";
     const desc = it.querySelector("description")?.textContent || "";
     const clean = stripHtml(desc).slice(0, 160);
-
-    // image (enclosure)
     const enc = it.querySelector("enclosure");
     const img = enc?.getAttribute("url") || "";
-
     return { title, link, pubDate, desc: clean, img };
   });
 }
@@ -493,14 +457,16 @@ function renderActu3() {
     el.actuGrid.appendChild(card);
   });
 
-  el.actuStatus.textContent = actuItems.length
-    ? `Actus: ${actuIndex + 1}–${Math.min(actuIndex + 3, actuItems.length)} / ${actuItems.length}`
-    : "Aucune actu pour le moment.";
+  if (el.actuStatus) {
+    el.actuStatus.textContent = actuItems.length
+      ? `Actus: ${actuIndex + 1}–${Math.min(actuIndex + 3, actuItems.length)} / ${actuItems.length}`
+      : "Aucune actu pour le moment.";
+  }
 }
 
 async function loadActu(showNotif = true) {
   try {
-    el.actuStatus.textContent = "Chargement des actus…";
+    if (el.actuStatus) el.actuStatus.textContent = "Chargement des actus…";
     let all = [];
     for (const src of ACTU_SOURCES) {
       try {
@@ -508,27 +474,25 @@ async function loadActu(showNotif = true) {
         all = all.concat(parseRss(txt));
       } catch {}
     }
-    // fallback si tout rate
+
     if (!all.length) {
       all = [
-        { title:"Actu surf indisponible (CORS/source)", link:"actu.html", pubDate:new Date().toISOString(), desc:"Ajoute/Change des sources RSS dans script.js (ACTU_SOURCES).", img:"" }
+        { title:"Actu surf indisponible (CORS/source)", link:"actu.html", pubDate:new Date().toISOString(), desc:"Change des sources RSS dans script.js (ACTU_SOURCES).", img:"" }
       ];
     }
 
-    // tri date
     all.sort((a,b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
     const prevTop = actuItems[0]?.title || "";
     actuItems = all.slice(0, 30);
     actuIndex = 0;
     renderActu3();
 
-    // notif si nouvelle actu
-    if (showNotif && prevTop && actuItems[0]?.title && actuItems[0].title !== prevTop) {
+    if (showNotif && prevTop && actuItems[0]?.title && actuItems[0].title !== prevTop && el.newsNotif && el.newsNotifSub) {
       el.newsNotifSub.textContent = actuItems[0].title.slice(0, 70);
       el.newsNotif.classList.remove("hidden");
     }
   } catch (e) {
-    el.actuStatus.textContent = "Impossible de récupérer les actus.";
+    if (el.actuStatus) el.actuStatus.textContent = "Impossible de récupérer les actus.";
   }
 }
 
@@ -601,7 +565,6 @@ if (el.loginSave) el.loginSave.addEventListener("click", () => {
    Init
 ------------------------------ */
 (function init() {
-  // push content below fixed navbar
   document.body.style.paddingTop = "72px";
 
   initMap();

@@ -1,20 +1,17 @@
 /* =========================
-   OCEANLY — spot.js (premium)
-   - Layout premium (grid/cards)
-   - 7 jours en bandeau horizontal
-   - Mini-map Leaflet
-   - Refresh modal (5s) + refresh
-   - Caméra => camera.html?spot=slug (mapping robuste)
+   OCEANLY — spot.js (premium) — UNIFIÉ
+   - Favoris = oceanly:favorites (unique)
+   - Spot info = data.js (window.OCEANLY.SPOTS)
+   - Caméra => camera.html?spot=slug
    ========================= */
 
-const LS_FAV = "oceanly:favs";
+const LS_FAV = "oceanly:favorites";
 
-/* Mapping ViewSurf (optionnel) — si tu as une URL EXACTE tu la mets ici.
-   Sinon fallback = recherche ViewSurf via le nom du spot. */
+/* ViewSurf direct optionnel */
 const VIEW_SURF_BY_SLUG = {
   "lacanau-ocean": "https://viewsurf.com/univers/surf-cam/FR/Nouvelle-Aquitaine/Gironde/Lacanau-Ocean",
   "carcans-plage": "https://viewsurf.com/univers/surf-cam/FR/Nouvelle-Aquitaine/Gironde/Carcans-Plage",
-  "hossegor-la-graviere": "https://viewsurf.com/univers/surf-cam/FR/Nouvelle-Aquitaine/Landes/Hossegor",
+  "hossegor-graviere": "https://viewsurf.com/univers/surf-cam/FR/Nouvelle-Aquitaine/Landes/Hossegor",
 };
 
 function qs(name) {
@@ -46,11 +43,7 @@ function toggleFav(slug) {
   return favs.includes(slug);
 }
 
-/* -------------------------
-   Demo spots (si ton site a déjà une base spots ailleurs,
-   tu peux remplacer cette liste par ton “SPOTS” global)
-   ------------------------- */
-const SPOT_FALLBACK = {
+const FALLBACK_SPOT = {
   slug: "lacanau-ocean",
   name: "Lacanau Océan",
   lat: 44.994,
@@ -59,15 +52,12 @@ const SPOT_FALLBACK = {
 };
 
 function getSpotFromURL() {
-  // format: spot.html?spot=lacanau-ocean
-  const slug = (qs("spot") || SPOT_FALLBACK.slug).trim();
-  // si tu as un storage/global spots, tu peux faire la lookup ici
-  // ex: return window.OCEANLY_SPOTS.find(s=>s.slug===slug) || ...
-  return { ...SPOT_FALLBACK, slug, name: slug.replace(/-/g, " ").toUpperCase() };
+  const slug = (qs("spot") || FALLBACK_SPOT.slug).trim();
+  const fromData = window.OCEANLY?.getSpotBySlug ? window.OCEANLY.getSpotBySlug(slug) : null;
+  return fromData ? fromData : { ...FALLBACK_SPOT, slug, name: slug.replace(/-/g, " ") };
 }
 
 function qualityFromScore(score10) {
-  // score10: 0..10
   if (score10 >= 9) return { tag: "EXCELLENT", color: "good", icon: "🟢" };
   if (score10 >= 7) return { tag: "BON", color: "good", icon: "🟢" };
   if (score10 >= 4) return { tag: "MOYEN", color: "ok", icon: "🟠" };
@@ -75,22 +65,14 @@ function qualityFromScore(score10) {
   return { tag: "TEMPÊTE", color: "storm", icon: "🟣" };
 }
 
-/* -------------------------
-   “Données” (placeholder premium)
-   IMPORTANT: tu m’as demandé “données réelles”.
-   Sans clé API côté client, on ne peut pas tout faire parfait (marée/eau).
-   Ici: structure stable + refresh H24 possible (toutes les X minutes) + UI.
-   Tu pourras brancher une API réelle ensuite sans casser l’UI.
-   ------------------------- */
 function makeFakeNow() {
-  // (stable-ish) pseudo-random déterministe par slug + heure
   const t = new Date();
   const hh = t.getHours();
   const base = (hh % 12) / 12;
 
-  const swell = 0.8 + base * 3.8;            // 0.8..4.6 m
-  const period = 7 + Math.round(base * 8);   // 7..15 s
-  const wind = Math.round(4 + (1 - base) * 28); // 4..32 km/h
+  const swell = 0.8 + base * 3.8;
+  const period = 7 + Math.round(base * 8);
+  const wind = Math.round(4 + (1 - base) * 28);
   const score = Math.max(0, Math.min(10, Math.round((period * 0.6 + swell * 1.2) - wind * 0.15)));
   const conf = Math.max(40, Math.min(95, Math.round(55 + base * 35)));
 
@@ -113,15 +95,13 @@ function makeFakeWeek(now) {
   return out;
 }
 
-/* Marée “approx” semi-diurne (12h25) — robuste UI + countdown temps réel */
 function tideApprox() {
   const now = new Date();
-  const periodMin = 12 * 60 + 25; // 745 min
+  const periodMin = 12 * 60 + 25;
   const anchor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
   const diffMin = Math.floor((now.getTime() - anchor.getTime()) / 60000);
   const phase = ((diffMin % periodMin) + periodMin) % periodMin;
 
-  // 0..periodMin, switch at half
   const rising = phase < periodMin / 2;
   const nextSwitchMin = rising ? (periodMin / 2 - phase) : (periodMin - phase);
   const next = new Date(now.getTime() + nextSwitchMin * 60000);
@@ -135,17 +115,12 @@ function fmtCountdown(ms) {
   return `${hh}:${mm}:${ss}`;
 }
 
-/* Caméra: on va vers camera.html?spot=slug
-   et on stocke aussi l’URL ViewSurf dans dataset (utile plus tard). */
-function setCameraLink(el, slug, name) {
-  const direct = VIEW_SURF_BY_SLUG[slug];
-  el.btnCamera.href = `camera.html?spot=${encodeURIComponent(slug)}`;
-  el.btnCamera.dataset.viewsurf = direct || `https://viewsurf.com/?s=${encodeURIComponent(name)}`;
+function setCameraLink(el, spot) {
+  el.btnCamera.href = `camera.html?spot=${encodeURIComponent(spot.slug)}`;
+  const direct = VIEW_SURF_BY_SLUG[spot.slug];
+  el.btnCamera.dataset.viewsurf = direct || `https://viewsurf.com/?s=${encodeURIComponent(spot.name)}`;
 }
 
-/* -------------------------
-   Leaflet mini map
-   ------------------------- */
 let miniMap = null;
 let miniMarker = null;
 
@@ -183,9 +158,6 @@ function ensureMiniMap(spot) {
   }).addTo(miniMap);
 }
 
-/* -------------------------
-   Rendering
-   ------------------------- */
 function elRefs() {
   return {
     title: document.getElementById("spot-title"),
@@ -229,7 +201,6 @@ function renderToday(el, now) {
   el.kConfidence.textContent = `${now.conf}%`;
   el.kUpdated.textContent = `Maj : ${now.updated.toLocaleString("fr-FR")}`;
 
-  // “premium summary”
   const txt =
     now.score >= 7
       ? "Session premium : houle + période solides, vent favorable. À ne pas rater."
@@ -245,7 +216,6 @@ function renderToday(el, now) {
       ? "Période faible → énergie limitée, vagues molles."
       : "Équilibre correct entre houle, période et vent → conditions correctes.";
 
-  // météo placeholder
   const air = Math.round(10 + (now.period - 7) * 1.2);
   const water = Math.round(12 + (now.swell - 1) * 1.2);
   el.meteoText.innerHTML = `Air : <b>${air}°C</b><br>Eau : <b>${water}°C</b>`;
@@ -315,7 +285,6 @@ function renderDayDetails(el, d) {
 }
 
 function renderTimeline(el, d) {
-  // mini “pédagogique” premium
   const q = qualityFromScore(d.score);
   const why =
     d.wind > 22 ? "Vent fort → vagues dégradées, conditions plus techniques."
@@ -330,13 +299,11 @@ function renderTimeline(el, d) {
     </div>
     <div class="timeline-item">
       <div class="timeline-title">Conseil</div>
-      <div class="timeline-sub">${d.wind > 18 ? "Cherche un spot abrité / orienté offshore." : "Fenêtre exploitable : go !"}
-      </div>
+      <div class="timeline-sub">${d.wind > 18 ? "Cherche un spot abrité / orienté offshore." : "Fenêtre exploitable : go !"}</div>
     </div>
   `;
 }
 
-/* Refresh modal 5s, puis rerender */
 async function refreshWithCountdown(el, doRefresh) {
   el.refreshModal.classList.remove("hidden");
 
@@ -361,7 +328,6 @@ async function refreshWithCountdown(el, doRefresh) {
 }
 
 function bindUI(el, spot, state) {
-  // fav
   const syncFavBtn = () => {
     const on = isFav(spot.slug);
     el.btnFav.textContent = on ? "❤️ En favori" : "❤️ Favori";
@@ -375,7 +341,6 @@ function bindUI(el, spot, state) {
     toast(on ? "Ajouté aux favoris" : "Retiré des favoris");
   });
 
-  // refresh
   el.btnRefresh.addEventListener("click", () => {
     refreshWithCountdown(el, () => {
       state.now = makeFakeNow();
@@ -385,19 +350,17 @@ function bindUI(el, spot, state) {
     });
   });
 
-  // caméra link (robuste)
-  setCameraLink(el, spot.slug, spot.name);
+  setCameraLink(el, spot);
 }
 
 function renderAll(el, spot, state) {
   el.title.textContent = spot.name;
-  el.sub.textContent = `${(spot.lat ?? "-").toFixed?.(3) ?? spot.lat}, ${(spot.lon ?? "-").toFixed?.(3) ?? spot.lon} • ${spot.region || ""}`;
+  el.sub.textContent = `${spot.lat.toFixed(3)}, ${spot.lon.toFixed(3)} • ${spot.region || ""}`;
 
   renderToday(el, state.now);
   renderWeek(el, state.week);
   ensureMiniMap(spot);
 
-  // next window placeholder: “prochain bon créneau”
   const next = new Date(state.now.updated);
   next.setHours(next.getHours() + 3);
   next.setMinutes(0, 0, 0);
@@ -426,8 +389,6 @@ function main() {
 
   bindUI(el, spot, state);
   renderAll(el, spot, state);
-
-  // marée countdown live
   renderTide(el);
 }
 

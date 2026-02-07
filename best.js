@@ -1,15 +1,7 @@
 /* ===============================
-   OCEANLY — best.js (FULL)
-   Page best.html:
-   - Lit ?spot=slug (si présent)
-   - Sinon utilise le cache du ranking home (oceanly:scores_cache)
-   - Fallback sur lacanau
-   - Calcule et affiche:
-      Tag + Score + Houle + Vent
-   - Boutons:
-      - Conditions (blue)
-      - ViewSurf (red) nouvel onglet
-      - Voir sur la carte -> renvoie vers index.html#map (et stocke slug à focus)
+   OCEANLY — best.js (UNIFIÉ)
+   - Utilise window.OCEANLY.SPOTS (data.js)
+   - Plus de liste spot différente
    =============================== */
 
 (() => {
@@ -20,34 +12,21 @@
   const dom = {
     navbar: $("navbar"),
     name: $("best-spot-name"),
-    sub: $("best-spot-sub"),
-
     tag: $("best-tag"),
     score: $("best-score"),
     swell: $("best-swell"),
     wind: $("best-wind"),
-
     openCond: $("best-open-conditions"),
     openCam: $("best-open-camera"),
     openMap: $("best-open-map"),
-
     toast: $("toast")
   };
 
   const LS_SCORES_CACHE = "oceanly:scores_cache";
   const LS_FOCUS_SPOT = "oceanly:focus_spot";
 
-  const SPOTS = [
-    { slug: "lacanau", name: "Lacanau", lat: 45.0008, lon: -1.2002, viewsurf: "https://viewsurf.com/" },
-    { slug: "carcans", name: "Carcans", lat: 45.0802, lon: -1.1929, viewsurf: "https://viewsurf.com/" },
-    { slug: "cap-ferret", name: "Cap Ferret", lat: 44.6320, lon: -1.2460, viewsurf: "https://viewsurf.com/" },
-    { slug: "biscarrosse", name: "Biscarrosse", lat: 44.4450, lon: -1.2500, viewsurf: "https://viewsurf.com/" },
-    { slug: "mimizan", name: "Mimizan", lat: 44.2140, lon: -1.2930, viewsurf: "https://viewsurf.com/" },
-    { slug: "seignosse", name: "Seignosse", lat: 43.6900, lon: -1.4400, viewsurf: "https://viewsurf.com/" },
-    { slug: "hossegor", name: "Hossegor", lat: 43.6650, lon: -1.4380, viewsurf: "https://viewsurf.com/" },
-    { slug: "capbreton", name: "Capbreton", lat: 43.6350, lon: -1.4280, viewsurf: "https://viewsurf.com/" },
-    { slug: "hendaye", name: "Hendaye", lat: 43.3670, lon: -1.7740, viewsurf: "https://viewsurf.com/" },
-  ];
+  const SPOTS = (window.OCEANLY && window.OCEANLY.SPOTS) ? window.OCEANLY.SPOTS : [];
+  const getSpotBySlug = window.OCEANLY?.getSpotBySlug;
 
   function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
@@ -73,10 +52,6 @@
 
   function safeJSONParse(v, fallback){
     try { return JSON.parse(v); } catch { return fallback; }
-  }
-
-  function getSpot(slug){
-    return SPOTS.find(s => s.slug === slug) || SPOTS[0];
   }
 
   function scoreDay(wh, wp, wind, gust){
@@ -147,21 +122,24 @@
   }
 
   function pickSlug(){
-    // 1) URL param
     const fromUrl = getParam("spot");
     if (fromUrl) return fromUrl;
 
-    // 2) cache (best of home)
     const cached = safeJSONParse(localStorage.getItem(LS_SCORES_CACHE), null);
     if (cached?.results?.length) return cached.results[0].slug;
 
-    // 3) fallback
-    return "lacanau";
+    return "lacanau-ocean";
+  }
+
+  function getSpot(slug){
+    const s = getSpotBySlug ? getSpotBySlug(slug) : null;
+    if (s) return s;
+    return SPOTS[0] || { slug:"lacanau-ocean", name:"Lacanau Océan", lat:44.994, lon:-1.210, region:"Gironde" };
   }
 
   function wireButtons(spot){
     if (dom.openCond) dom.openCond.href = `spot.html?spot=${encodeURIComponent(spot.slug)}`;
-    if (dom.openCam) dom.openCam.href = spot.viewsurf || "https://viewsurf.com/";
+    if (dom.openCam) dom.openCam.href = `camera.html?spot=${encodeURIComponent(spot.slug)}`;
     if (dom.openMap) {
       dom.openMap.addEventListener("click", () => {
         try { localStorage.setItem(LS_FOCUS_SPOT, spot.slug); } catch {}
@@ -186,7 +164,6 @@
 
     wireButtons(spot);
 
-    // If cache has this spot data, use it instantly
     const cached = safeJSONParse(localStorage.getItem(LS_SCORES_CACHE), null);
     const cachedRow = cached?.results?.find(r => r.slug === slug);
     if (cachedRow){
@@ -197,7 +174,6 @@
       );
     }
 
-    // Always refresh real-time daily in this page
     try{
       const [marine, weather] = await Promise.all([
         fetchMarineDaily(spot.lat, spot.lon),
